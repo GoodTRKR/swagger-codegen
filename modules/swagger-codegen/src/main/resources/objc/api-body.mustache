@@ -1,7 +1,7 @@
 {{#operations}}
 #import "{{classname}}.h"
-#import "SWGFile.h"
-#import "SWGQueryParamCollection.h"
+#import "FotitionFile.h"
+#import "FotitionQueryParamCollection.h"
 {{#imports}}#import "{{import}}.h"
 {{/imports}}
 {{newline}}
@@ -19,20 +19,20 @@ static NSString * basePath = @"{{basePath}}";
 - (id) init {
     self = [super init];
     if (self) {
-        self.apiClient = [SWGApiClient sharedClientFromPool:basePath];
+        self.apiClient = [FotitionAPIClient sharedClientFromPool:basePath];
         self.defaultHeaders = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
-- (id) initWithApiClient:(SWGApiClient *)apiClient {
+- (id) initWithApiClient:(FotitionAPIClient *)apiClient {
     self = [super init];
     if (self) {
         if (apiClient) {
             self.apiClient = apiClient;
         }
         else {
-            self.apiClient = [SWGApiClient sharedClientFromPool:basePath];
+            self.apiClient = [FotitionAPIClient sharedClientFromPool:basePath];
         }
         self.defaultHeaders = [NSMutableDictionary dictionary];
     }
@@ -69,7 +69,7 @@ static NSString * basePath = @"{{basePath}}";
 }
 
 -(unsigned long) requestQueueSize {
-    return [SWGApiClient requestQueueSize];
+    return [FotitionAPIClient requestQueueSize];
 }
 
 
@@ -96,13 +96,13 @@ static NSString * basePath = @"{{basePath}}";
     if ([requestUrl rangeOfString:@".{format}"].location != NSNotFound)
         [requestUrl replaceCharactersInRange: [requestUrl rangeOfString:@".{format}"] withString:@".json"];
 
-    {{#pathParams}}[requestUrl replaceCharactersInRange: [requestUrl rangeOfString:[NSString stringWithFormat:@"%@%@%@", @"{", @"{{baseName}}", @"}"]] withString: [SWGApiClient escape:{{paramName}}]];
+    {{#pathParams}}[requestUrl replaceCharactersInRange: [requestUrl rangeOfString:[NSString stringWithFormat:@"%@%@%@", @"{", @"{{baseName}}", @"}"]] withString: [FotitionAPIClient escape:{{paramName}}]];
     {{/pathParams}}
 
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
     {{#queryParams}}if({{paramName}} != nil) {
         {{#collectionFormat}}
-        queryParams[@"{{baseName}}"] = [[SWGQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
+        queryParams[@"{{baseName}}"] = [[FotitionQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
         {{/collectionFormat}}
         {{^collectionFormat}}queryParams[@"{{baseName}}"] = {{paramName}};{{/collectionFormat}}
     }
@@ -114,7 +114,7 @@ static NSString * basePath = @"{{basePath}}";
     {{/headerParams}}
     
     // HTTP header `Accept` 
-    headerParams[@"Accept"] = [SWGApiClient selectHeaderAccept:@[{{#produces}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}}]];
+    headerParams[@"Accept"] = [FotitionAPIClient selectHeaderAccept:@[{{#produces}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}}]];
     if ([headerParams[@"Accept"] length] == 0) {
         [headerParams removeObjectForKey:@"Accept"];
     }
@@ -129,7 +129,7 @@ static NSString * basePath = @"{{basePath}}";
     }
 
     // request content type
-    NSString *requestContentType = [SWGApiClient selectHeaderContentType:@[{{#consumes}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/consumes}}]];
+    NSString *requestContentType = [FotitionAPIClient selectHeaderContentType:@[{{#consumes}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/consumes}}]];
 
     // Authentication setting
     NSArray *authSettings = @[{{#authMethods}}@"{{name}}"{{#hasMore}}, {{/hasMore}}{{/authMethods}}];
@@ -142,7 +142,7 @@ static NSString * basePath = @"{{basePath}}";
         NSMutableArray * objs = [[NSMutableArray alloc] init];
         for (id dict in (NSArray*)__body) {
             if([dict respondsToSelector:@selector(toDictionary)]) {
-                [objs addObject:[(SWGObject*)dict toDictionary]];
+                [objs addObject:[(FotitionObject*)dict toDictionary]];
             }
             else{
                 [objs addObject:dict];
@@ -151,7 +151,7 @@ static NSString * basePath = @"{{basePath}}";
         bodyDictionary = objs;
     }
     else if([__body respondsToSelector:@selector(toDictionary)]) {
-        bodyDictionary = [(SWGObject*)__body toDictionary];
+        bodyDictionary = [(FotitionObject*)__body toDictionary];
     }
     else if([__body isKindOfClass:[NSString class]]) {
         // convert it to a dictionary

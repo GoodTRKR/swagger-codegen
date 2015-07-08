@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
 #import "JSONModel.h"
 
-@interface SWGObject : JSONModel
+@interface FotitionObject : JSONModel
 @end

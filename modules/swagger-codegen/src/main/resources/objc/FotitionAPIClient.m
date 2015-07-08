@@ -1,11 +1,11 @@
-#import "SWGApiClient.h"
-#import "SWGFile.h"
-#import "SWGQueryParamCollection.h"
-#import "SWGConfiguration.h"
+#import "FotitionAPIClient.h"
+#import "FotitionFile.h"
+#import "FotitionQueryParamCollection.h"
+#import "FotitionConfiguration.h"
 
-@implementation SWGApiClient
+@implementation FotitionAPIClient
 
-NSString *const SWGResponseObjectErrorKey = @"SWGResponseObject";
+NSString *const FotitionResponseObjectErrorKey = @"FotitionResponseObject";
 
 static long requestId = 0;
 static bool offlineState = false;
@@ -58,7 +58,7 @@ static bool loggingEnabled = true;
     return sharedQueue;
 }
 
-+(SWGApiClient *)sharedClientFromPool:(NSString *)baseUrl {
++(FotitionAPIClient *)sharedClientFromPool:(NSString *)baseUrl {
     static NSMutableDictionary *_pool = nil;
     if (queuedRequests == nil) {
         queuedRequests = [[NSMutableSet alloc]init];
@@ -72,16 +72,16 @@ static bool loggingEnabled = true;
         _pool = [[NSMutableDictionary alloc] init];
 
         // initialize URL cache
-        [SWGApiClient configureCacheWithMemoryAndDiskCapacity:4*1024*1024 diskSize:32*1024*1024];
+        [FotitionAPIClient configureCacheWithMemoryAndDiskCapacity:4*1024*1024 diskSize:32*1024*1024];
 
         // configure reachability
-        [SWGApiClient configureCacheReachibilityForHost:baseUrl];
+        [FotitionAPIClient configureCacheReachibilityForHost:baseUrl];
     }
 
     @synchronized(self) {
-        SWGApiClient * client = [_pool objectForKey:baseUrl];
+        FotitionAPIClient * client = [_pool objectForKey:baseUrl];
         if (client == nil) {
-            client = [[SWGApiClient alloc] initWithBaseURL:[NSURL URLWithString:baseUrl]];
+            client = [[FotitionAPIClient alloc] initWithBaseURL:[NSURL URLWithString:baseUrl]];
             [_pool setValue:client forKey:baseUrl ];
             if(loggingEnabled)
                 NSLog(@"new client for path %@", baseUrl);
@@ -156,7 +156,7 @@ static bool loggingEnabled = true;
 }
 
 +(NSNumber*) queueRequest {
-    NSNumber* requestId = [SWGApiClient nextRequestId];
+    NSNumber* requestId = [FotitionAPIClient nextRequestId];
     if(loggingEnabled)
         NSLog(@"added %@ to request queue", requestId);
     [queuedRequests addObject:requestId];
@@ -221,31 +221,31 @@ static bool loggingEnabled = true;
 }
 
 +(void) configureCacheReachibilityForHost:(NSString*)host {
-    [[SWGApiClient sharedClientFromPool:host].reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+    [[FotitionAPIClient sharedClientFromPool:host].reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
         reachabilityStatus = status;
         switch (status) {
             case AFNetworkReachabilityStatusUnknown:
                 if(loggingEnabled)
                     NSLog(@"reachability changed to AFNetworkReachabilityStatusUnknown");
-                [SWGApiClient setOfflineState:true];
+                [FotitionAPIClient setOfflineState:true];
                 break;
 
             case AFNetworkReachabilityStatusNotReachable:
                 if(loggingEnabled)
                     NSLog(@"reachability changed to AFNetworkReachabilityStatusNotReachable");
-                [SWGApiClient setOfflineState:true];
+                [FotitionAPIClient setOfflineState:true];
                 break;
 
             case AFNetworkReachabilityStatusReachableViaWWAN:
                 if(loggingEnabled)
                     NSLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWWAN");
-                [SWGApiClient setOfflineState:false];
+                [FotitionAPIClient setOfflineState:false];
                 break;
 
             case AFNetworkReachabilityStatusReachableViaWiFi:
                 if(loggingEnabled)
                     NSLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWiFi");
-                [SWGApiClient setOfflineState:false];
+                [FotitionAPIClient setOfflineState:false];
                 break;
             default:
                 break;
@@ -255,7 +255,7 @@ static bool loggingEnabled = true;
             reachabilityChangeBlock(status);
         }
     }];
-    [[SWGApiClient sharedClientFromPool:host].reachabilityManager startMonitoring];
+    [[FotitionAPIClient sharedClientFromPool:host].reachabilityManager startMonitoring];
 }
 
 -(NSString*) pathWithQueryParamsToString:(NSString*) path
@@ -272,32 +272,32 @@ static bool loggingEnabled = true;
             id queryParam = [queryParams valueForKey:key];
             if([queryParam isKindOfClass:[NSString class]]){
                 [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                                          [SWGApiClient escape:key], [SWGApiClient escape:[queryParams valueForKey:key]]]];
+                                          [FotitionAPIClient escape:key], [FotitionAPIClient escape:[queryParams valueForKey:key]]]];
             }
-            else if([queryParam isKindOfClass:[SWGQueryParamCollection class]]){
-                SWGQueryParamCollection * coll = (SWGQueryParamCollection*) queryParam;
+            else if([queryParam isKindOfClass:[FotitionQueryParamCollection class]]){
+                FotitionQueryParamCollection * coll = (FotitionQueryParamCollection*) queryParam;
                 NSArray* values = [coll values];
                 NSString* format = [coll format];
 
                 if([format isEqualToString:@"csv"]) {
                     [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                        [SWGApiClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@","]]]];
+                        [FotitionAPIClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@","]]]];
 
                 }
                 else if([format isEqualToString:@"tsv"]) {
                     [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                        [SWGApiClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@"\t"]]]];
+                        [FotitionAPIClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@"\t"]]]];
 
                 }
                 else if([format isEqualToString:@"pipes"]) {
                     [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                        [SWGApiClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@"|"]]]];
+                        [FotitionAPIClient escape:key], [NSString stringWithFormat:@"%@", [values componentsJoinedByString:@"|"]]]];
 
                 }
                 else if([format isEqualToString:@"multi"]) {
                     for(id obj in values) {
                         [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                            [SWGApiClient escape:key], [NSString stringWithFormat:@"%@", obj]]];
+                            [FotitionAPIClient escape:key], [NSString stringWithFormat:@"%@", obj]]];
                         counter += 1;
                     }
 
@@ -305,7 +305,7 @@ static bool loggingEnabled = true;
             }
             else {
                 [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
-                                          [SWGApiClient escape:key], [NSString stringWithFormat:@"%@", [queryParams valueForKey:key]]]];
+                                          [FotitionAPIClient escape:key], [NSString stringWithFormat:@"%@", [queryParams valueForKey:key]]]];
             }
 
             counter += 1;
@@ -333,7 +333,7 @@ static bool loggingEnabled = true;
     NSMutableDictionary *headersWithAuth = [NSMutableDictionary dictionaryWithDictionary:*headers];
     NSMutableDictionary *querysWithAuth = [NSMutableDictionary dictionaryWithDictionary:*querys];
     
-    SWGConfiguration *config = [SWGConfiguration sharedConfig];
+    FotitionConfiguration *config = [FotitionConfiguration sharedConfig];
     for (NSString *auth in authSettings) {
         NSDictionary *authSetting = [[config authSettings] objectForKey:auth];
         
@@ -389,11 +389,11 @@ static bool loggingEnabled = true;
 
     NSMutableURLRequest * request = nil;
     if (body != nil && [body isKindOfClass:[NSArray class]]){
-        SWGFile * file;
+        FotitionFile * file;
         NSMutableDictionary * params = [[NSMutableDictionary alloc] init];
         for(id obj in body) {
-            if([obj isKindOfClass:[SWGFile class]]) {
-                file = (SWGFile*) obj;
+            if([obj isKindOfClass:[FotitionFile class]]) {
+                file = (FotitionFile*) obj;
                 requestContentType = @"multipart/form-data";
             }
             else if([obj isKindOfClass:[NSDictionary class]]) {
@@ -466,7 +466,7 @@ static bool loggingEnabled = true;
         if([body isKindOfClass:[NSDictionary class]] || [body isKindOfClass:[NSArray class]]){
             [self.requestSerializer setValue:requestContentType forHTTPHeaderField:@"Content-Type"];
         }
-        else if ([body isKindOfClass:[SWGFile class]]) {}
+        else if ([body isKindOfClass:[FotitionFile class]]) {}
         else {
             NSAssert(false, @"unsupported post type!");
         }
@@ -486,7 +486,7 @@ static bool loggingEnabled = true;
         [self logRequest:request];
     }
 
-    NSNumber* requestId = [SWGApiClient queueRequest];
+    NSNumber* requestId = [FotitionAPIClient queueRequest];
     AFHTTPRequestOperation *op =
     [self HTTPRequestOperationWithRequest:request
      success:^(AFHTTPRequestOperation *operation, id JSON) {
@@ -500,7 +500,7 @@ static bool loggingEnabled = true;
              NSMutableDictionary *userInfo = [error.userInfo mutableCopy];
              if(operation.responseObject) {
                  // Add in the (parsed) response body.
-                 userInfo[SWGResponseObjectErrorKey] = operation.responseObject;
+                 userInfo[FotitionResponseObjectErrorKey] = operation.responseObject;
              }
              NSError *augmentedError = [error initWithDomain:error.domain code:error.code userInfo:userInfo];
 
@@ -551,11 +551,11 @@ static bool loggingEnabled = true;
 
     NSMutableURLRequest * request = nil;
     if (body != nil && [body isKindOfClass:[NSArray class]]){
-        SWGFile * file;
+        FotitionFile * file;
         NSMutableDictionary * params = [[NSMutableDictionary alloc] init];
         for(id obj in body) {
-            if([obj isKindOfClass:[SWGFile class]]) {
-                file = (SWGFile*) obj;
+            if([obj isKindOfClass:[FotitionFile class]]) {
+                file = (FotitionFile*) obj;
                 requestContentType = @"multipart/form-data";
             }
             else if([obj isKindOfClass:[NSDictionary class]]) {
@@ -630,7 +630,7 @@ static bool loggingEnabled = true;
         if([body isKindOfClass:[NSDictionary class]] || [body isKindOfClass:[NSArray class]]){
             [self.requestSerializer setValue:requestContentType forHTTPHeaderField:@"Content-Type"];
         }
-        else if ([body isKindOfClass:[SWGFile class]]){}
+        else if ([body isKindOfClass:[FotitionFile class]]){}
         else {
             NSAssert(false, @"unsupported post type!");
         }
@@ -646,7 +646,7 @@ static bool loggingEnabled = true;
     // Always disable cookies!
     [request setHTTPShouldHandleCookies:NO];
 
-    NSNumber* requestId = [SWGApiClient queueRequest];
+    NSNumber* requestId = [FotitionAPIClient queueRequest];
     AFHTTPRequestOperation *op = [self HTTPRequestOperationWithRequest:request
      success:^(AFHTTPRequestOperation *operation, id responseObject) {
          NSString *response = [operation responseString];
@@ -660,7 +660,7 @@ static bool loggingEnabled = true;
              NSMutableDictionary *userInfo = [error.userInfo mutableCopy];
              if(operation.responseObject) {
                  // Add in the (parsed) response body.
-                 userInfo[SWGResponseObjectErrorKey] = operation.responseObject;
+                 userInfo[FotitionResponseObjectErrorKey] = operation.responseObject;
              }
              NSError *augmentedError = [error initWithDomain:error.domain code:error.code userInfo:userInfo];
 

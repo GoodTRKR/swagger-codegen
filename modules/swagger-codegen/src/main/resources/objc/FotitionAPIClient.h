@@ -6,10 +6,10 @@
  *
  * The corresponding value is the parsed response body for an HTTP error.
  */
-extern NSString *const SWGResponseObjectErrorKey;
+extern NSString *const FotitionResponseObjectErrorKey;
 
 
-@interface SWGApiClient : AFHTTPRequestOperationManager
+@interface FotitionAPIClient : AFHTTPRequestOperationManager
 
 @property(nonatomic, assign) NSURLRequestCachePolicy cachePolicy;
 @property(nonatomic, assign) NSTimeInterval timeoutInterval;
@@ -25,9 +25,9 @@ extern NSString *const SWGResponseObjectErrorKey;
  *
  * @param baseUrl The base url of api client.
  *
- * @return The SWGApiClient instance.
+ * @return The FotitionAPIClient instance.
  */
-+(SWGApiClient *)sharedClientFromPool:(NSString *)baseUrl;
++(FotitionAPIClient *)sharedClientFromPool:(NSString *)baseUrl;
 
 /**
  * Get the operations queue
@@ -116,7 +116,7 @@ extern NSString *const SWGResponseObjectErrorKey;
 /**
  * Set the client reachability strategy
  *
- * @param host The host of SWGApiClient.
+ * @param host The host of FotitionAPIClient.
  */
 +(void) configureCacheReachibilityForHost:(NSString*)host;
 

@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import "SWGObject.h"
+#import "FotitionObject.h"
 {{#imports}}#import "{{import}}.h"
 {{/imports}}
 {{newline}}
@@ -9,7 +9,7 @@
 @protocol {{classname}}
 @end
   
-@interface {{classname}} : SWGObject
+@interface {{classname}} : FotitionObject
 
 {{#vars}}
 {{#description}}/* {{{description}}} {{^required}}[optional]{{/required}}

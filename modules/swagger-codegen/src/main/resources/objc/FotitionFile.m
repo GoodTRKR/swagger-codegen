@@ -1,6 +1,6 @@
-#import "SWGFile.h"
+#import "FotitionFile.h"
 
-@implementation SWGFile
+@implementation FotitionFile
 
 @synthesize name = _name;
 @synthesize mimeType = _mimeType;

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-@interface SWGFile : NSObject
+@interface FotitionFile : NSObject
 
 @property(nonatomic, readonly) NSString* name;
 @property(nonatomic, readonly) NSString* mimeType;

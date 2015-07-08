@@ -1,6 +1,6 @@
-#import "SWGQueryParamCollection.h"
+#import "FotitionQueryParamCollection.h"
 
-@implementation SWGQueryParamCollection
+@implementation FotitionQueryParamCollection
 
 @synthesize values = _values;
 @synthesize format = _format;

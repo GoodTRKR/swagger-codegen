@@ -1,16 +1,16 @@
 #import <Foundation/Foundation.h>
 {{#imports}}#import "{{import}}.h"
 {{/imports}}
-#import "SWGObject.h"
-#import "SWGApiClient.h"
+#import "FotitionObject.h"
+#import "FotitionAPIClient.h"
 {{newline}}
 
 {{#operations}}
 @interface {{classname}}: NSObject
 
-@property(nonatomic, assign)SWGApiClient *apiClient;
+@property(nonatomic, assign)FotitionAPIClient *apiClient;
 
--(instancetype) initWithApiClient:(SWGApiClient *)apiClient;
+-(instancetype) initWithApiClient:(FotitionAPIClient *)apiClient;
 -(void) addHeader:(NSString*)value forKey:(NSString*)key;
 -(unsigned long) requestQueueSize;
 +({{classname}}*) apiWithHeader:(NSString*)headerValue key:(NSString*)key;

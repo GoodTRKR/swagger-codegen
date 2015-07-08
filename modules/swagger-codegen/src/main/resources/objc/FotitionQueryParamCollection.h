@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-@interface SWGQueryParamCollection : NSObject
+@interface FotitionQueryParamCollection : NSObject
 
 @property(nonatomic, readonly) NSArray* values;
 @property(nonatomic, readonly) NSString* format;
