@@ -1,22 +1,8 @@
-package io.swagger.codegen.languages;
+package com.fotition.swagger.codegen;
 
-import io.swagger.codegen.CliOption;
-import io.swagger.codegen.CodegenConfig;
-import io.swagger.codegen.CodegenProperty;
-import io.swagger.codegen.CodegenType;
-import io.swagger.codegen.DefaultCodegen;
-import io.swagger.codegen.SupportingFile;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
+import io.swagger.codegen.languages.*;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
-public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
+public class FotitionClientCodegen extends ObjcClientCodegen {
     protected Set<String> foundationClasses = new HashSet<String>();
     protected String sourceFolder = "client";
     protected String classPrefix = "Fotition";
