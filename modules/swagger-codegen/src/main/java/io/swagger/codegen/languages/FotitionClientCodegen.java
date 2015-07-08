@@ -1,4 +1,6 @@
-package io.swagger.codegen.languages;
+package com.fotition.swagger.codegen;
+
+import io.swagger.codegen.languages.*;
 
 import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
