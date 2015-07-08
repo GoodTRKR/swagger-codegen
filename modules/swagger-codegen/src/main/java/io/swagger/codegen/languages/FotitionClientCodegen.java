@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class FotitionClientCodegen extends ObjcClientCodegen implements CodegenConfig {
+public class FotitionClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     protected Set<String> foundationClasses = new HashSet<String>();
     protected String sourceFolder = "client";
