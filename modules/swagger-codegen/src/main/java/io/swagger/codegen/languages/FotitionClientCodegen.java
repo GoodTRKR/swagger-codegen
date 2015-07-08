@@ -20,9 +20,9 @@ import java.util.Set;
 public class FotitionClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     protected Set<String> foundationClasses = new HashSet<String>();
-    protected String sourceFolder = "fotitionClient";
-    protected String classPrefix = "Fotition";
-    protected String projectName = "fotitionClient";
+    protected String sourceFolder = "fotition-objc-client";
+    protected String classPrefix = "FT";
+    protected String projectName = "fotition-objc-client";
 
     public FotitionClientCodegen() {
         outputFolder = "generated-code" + File.separator + "fotition-objc";
@@ -30,7 +30,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
         modelTemplateFiles.put("model-body.mustache", ".m");
         apiTemplateFiles.put("api-header.mustache", ".h");
         apiTemplateFiles.put("api-body.mustache", ".m");
-        templateDir = "fotition";
+        templateDir = "fotition-objc";
         modelPackage = "";
 
         defaultIncludes = new HashSet<String>(
@@ -115,7 +115,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
     }
 
     public String getName() {
-        return "fotition";
+        return "fotition-objc";
     }
 
     public String getHelp() {
