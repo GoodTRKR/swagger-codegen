@@ -362,6 +362,15 @@ static bool loggingEnabled = true;
       requestContentType: (NSString*) requestContentType
      responseContentType: (NSString*) responseContentType
          completionBlock: (void (^)(NSDictionary*, NSError *))completionBlock {
+    
+    
+    // save existing header params
+    NSDictionary *tempHeaderParams;
+    
+    if ([self.requestSerializer HTTPRequestHeaders]) {
+        tempHeaderParams = [self.requestSerializer HTTPRequestHeaders];
+    }
+    
     // setting request serializer
     if ([requestContentType isEqualToString:@"application/json"]) {
         self.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -374,6 +383,13 @@ static bool loggingEnabled = true;
     }
     else {
         NSAssert(false, @"unsupport request type %@", requestContentType);
+    }
+    
+    //re-assign old params
+    if(tempHeaderParams){
+        for (NSString *key in tempHeaderParams) {
+            [self setValue:tempHeaderParams[key] forKey:key];
+        }
     }
 
     // setting response serializer
@@ -524,6 +540,15 @@ static bool loggingEnabled = true;
                      requestContentType: (NSString*) requestContentType
                     responseContentType: (NSString*) responseContentType
                         completionBlock: (void (^)(NSString*, NSError *))completionBlock {
+    
+    // save existing header params
+    NSDictionary *tempHeaderParams;
+    
+    if ([self.requestSerializer HTTPRequestHeaders]) {
+        tempHeaderParams = [self.requestSerializer HTTPRequestHeaders];
+    }
+    
+    
     // setting request serializer
     if ([requestContentType isEqualToString:@"application/json"]) {
         self.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -536,6 +561,13 @@ static bool loggingEnabled = true;
     }
     else {
         NSAssert(false, @"unsupport request type %@", requestContentType);
+    }
+    
+    //re-assign old params
+    if(tempHeaderParams){
+        for (NSString *key in tempHeaderParams) {
+            [self setValue:tempHeaderParams[key] forKey:key];
+        }
     }
 
     // setting response serializer
