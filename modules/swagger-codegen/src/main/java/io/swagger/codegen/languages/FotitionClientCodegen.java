@@ -19,8 +19,8 @@ import java.util.Set;
 public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected Set<String> foundationClasses = new HashSet<String>();
     protected String sourceFolder = "client";
-    protected String classPrefix = "SWG";
-    protected String projectName = "swaggerClient";
+    protected String classPrefix = "Fotition";
+    protected String projectName = "fotitionClient";
 
     public ObjcClientCodegen() {
         super();
@@ -139,18 +139,18 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
             additionalProperties.put("projectName", projectName);
         }
 
-        supportingFiles.add(new SupportingFile("SWGObject.h", sourceFolder, "SWGObject.h"));
-        supportingFiles.add(new SupportingFile("SWGObject.m", sourceFolder, "SWGObject.m"));
-        supportingFiles.add(new SupportingFile("SWGQueryParamCollection.h", sourceFolder, "SWGQueryParamCollection.h"));
-        supportingFiles.add(new SupportingFile("SWGQueryParamCollection.m", sourceFolder, "SWGQueryParamCollection.m"));
-        supportingFiles.add(new SupportingFile("SWGApiClient.h", sourceFolder, "SWGApiClient.h"));
-        supportingFiles.add(new SupportingFile("SWGApiClient.m", sourceFolder, "SWGApiClient.m"));
-        supportingFiles.add(new SupportingFile("SWGFile.h", sourceFolder, "SWGFile.h"));
-        supportingFiles.add(new SupportingFile("SWGFile.m", sourceFolder, "SWGFile.m"));
+        supportingFiles.add(new SupportingFile("FotitionObject.h", sourceFolder, "FotitionObject.h"));
+        supportingFiles.add(new SupportingFile("FotitionObject.m", sourceFolder, "FotitionObject.m"));
+        supportingFiles.add(new SupportingFile("FotitionQueryParamCollection.h", sourceFolder, "FotitionQueryParamCollection.h"));
+        supportingFiles.add(new SupportingFile("FotitionQueryParamCollection.m", sourceFolder, "FotitionQueryParamCollection.m"));
+        supportingFiles.add(new SupportingFile("FotitionAPIClient.h", sourceFolder, "FotitionAPIClient.h"));
+        supportingFiles.add(new SupportingFile("FotitionAPIClient.m", sourceFolder, "FotitionAPIClient.m"));
+        supportingFiles.add(new SupportingFile("FotitionFile.h", sourceFolder, "FotitionFile.h"));
+        supportingFiles.add(new SupportingFile("FotitionFile.m", sourceFolder, "FotitionFile.m"));
         supportingFiles.add(new SupportingFile("JSONValueTransformer+ISO8601.m", sourceFolder, "JSONValueTransformer+ISO8601.m"));
         supportingFiles.add(new SupportingFile("JSONValueTransformer+ISO8601.h", sourceFolder, "JSONValueTransformer+ISO8601.h"));
-        supportingFiles.add(new SupportingFile("SWGConfiguration-body.mustache", sourceFolder, "SWGConfiguration.m"));
-        supportingFiles.add(new SupportingFile("SWGConfiguration-header.mustache", sourceFolder, "SWGConfiguration.h"));
+        supportingFiles.add(new SupportingFile("FotitionConfiguration-body.mustache", sourceFolder, "FotitionConfiguration.m"));
+        supportingFiles.add(new SupportingFile("FotitionConfiguration-header.mustache", sourceFolder, "FotitionConfiguration.h"));
         supportingFiles.add(new SupportingFile("Podfile.mustache", "", "Podfile"));
     }
 
@@ -207,7 +207,7 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
             }
 
             // In this codition, type of property p is array of model,
-            // return container type combine inner type with pointer, e.g. `NSArray<SWGTag>*'
+            // return container type combine inner type with pointer, e.g. `NSArray<FotitionTag>*'
             String innerTypeDeclaration = getTypeDeclaration(inner);
 
             if (innerTypeDeclaration.endsWith("*")) {
@@ -229,8 +229,8 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
             else if (languageSpecificPrimitives.contains(swaggerType)) {
                 return swaggerType;
             }
-            // In this codition, type of p is objective-c object type, e.g. `SWGPet',
-            // return type of p with pointer, e.g. `SWGPet*'
+            // In this codition, type of p is objective-c object type, e.g. `FotitionPet',
+            // return type of p with pointer, e.g. `FotitionPet*'
             else {
                 return swaggerType + "*";
             }
