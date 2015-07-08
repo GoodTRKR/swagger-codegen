@@ -30,7 +30,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
         modelTemplateFiles.put("model-body.mustache", ".m");
         apiTemplateFiles.put("api-header.mustache", ".h");
         apiTemplateFiles.put("api-body.mustache", ".m");
-        templateDir = "objc";
+        templateDir = "fotition";
         modelPackage = "";
 
         defaultIncludes = new HashSet<String>(

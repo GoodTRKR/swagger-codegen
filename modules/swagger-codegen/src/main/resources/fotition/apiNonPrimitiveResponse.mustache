@@ -8,17 +8,17 @@
                  authSettings: authSettings
            requestContentType: requestContentType
           responseContentType: responseContentType
-              completionBlock: ^(NSDictionary *data, NSError *error) {
+              completionBlock: ^(NSDictionary *responseHeaders, NSDictionary *data, NSError *error) {
                 if (error) {
-                    {{#returnBaseType}}completionBlock(nil, error);{{/returnBaseType}}
-                    {{^returnBaseType}}completionBlock(error);{{/returnBaseType}}
+                    {{#returnBaseType}}completionBlock(responseHeaders, nil, error);{{/returnBaseType}}
+                    {{^returnBaseType}}completionBlock(responseHeaders, error);{{/returnBaseType}}
                     return;
                 }
                 {{#returnType}}{{returnType}} result = nil;
                 if (data) {
                     result = [[{{#instantiationType}}NSClassFromString(@"{{{instantiationType}}}") {{/instantiationType}}{{^instantiationType}}{{{returnBaseType}}} {{/instantiationType}} alloc] {{#returnContainer}}{{#isMapContainer}}initWithDictionary{{/isMapContainer}}{{#isListContainer}} initWithDictionary{{/isListContainer}}{{/returnContainer}}{{^returnContainer}} initWithDictionary{{/returnContainer}}:data error:nil];
                 }
-                {{#returnType}}completionBlock(result , nil);{{/returnType}}
+                {{#returnType}}completionBlock(responseHeaders, result , nil);{{/returnType}}
                 {{/returnType}}
               }];
     {{/returnTypeIsPrimitive}}
