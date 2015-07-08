@@ -16,14 +16,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
+public class FotitionClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected Set<String> foundationClasses = new HashSet<String>();
     protected String sourceFolder = "client";
     protected String classPrefix = "Fotition";
     protected String projectName = "fotitionClient";
 
-    public ObjcClientCodegen() {
-        super();
+    public FotitionClientCodegen() {
         outputFolder = "generated-code" + File.separator + "objc";
         modelTemplateFiles.put("model-header.mustache", ".h");
         modelTemplateFiles.put("model-body.mustache", ".m");
