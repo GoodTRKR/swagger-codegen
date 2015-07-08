@@ -20,12 +20,12 @@ import java.util.Set;
 public class FotitionClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     protected Set<String> foundationClasses = new HashSet<String>();
-    protected String sourceFolder = "client";
+    protected String sourceFolder = "fotitionClient";
     protected String classPrefix = "Fotition";
     protected String projectName = "fotitionClient";
 
     public FotitionClientCodegen() {
-        outputFolder = "generated-code" + File.separator + "objc";
+        outputFolder = "generated-code" + File.separator + "fotition-objc";
         modelTemplateFiles.put("model-header.mustache", ".h");
         modelTemplateFiles.put("model-body.mustache", ".m");
         apiTemplateFiles.put("api-header.mustache", ".h");
@@ -115,11 +115,11 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
     }
 
     public String getName() {
-        return "objc";
+        return "fotition";
     }
 
     public String getHelp() {
-        return "Generates an Objective-C client library.";
+        return "Generates an Objective-C client library for Fotition.";
     }
 
     @Override
