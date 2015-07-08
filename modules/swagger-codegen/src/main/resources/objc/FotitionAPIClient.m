@@ -361,14 +361,14 @@ static bool loggingEnabled = true;
             authSettings: (NSArray *) authSettings
       requestContentType: (NSString*) requestContentType
      responseContentType: (NSString*) responseContentType
-         completionBlock: (void (^)(NSDictionary*, NSError *))completionBlock {
+         completionBlock: (void (^)(NSDictionary *, NSDictionary*, NSError *))completionBlock {
     
     
     // save existing header params
-    NSDictionary *tempHeaderParams;
+    NSDictionary *oldHeaderParams;
     
     if ([self.requestSerializer HTTPRequestHeaders]) {
-        tempHeaderParams = [self.requestSerializer HTTPRequestHeaders];
+        oldHeaderParams = [self.requestSerializer HTTPRequestHeaders];
     }
     
     // setting request serializer
@@ -386,9 +386,9 @@ static bool loggingEnabled = true;
     }
     
     //re-assign old params
-    if(tempHeaderParams){
-        for (NSString *key in tempHeaderParams) {
-            [self setValue:tempHeaderParams[key] forKey:key];
+    if(oldHeaderParams){
+        for (NSString *key in oldHeaderParams) {
+            [self setValue:oldHeaderParams[key] forKey:key];
         }
     }
 
@@ -480,7 +480,7 @@ static bool loggingEnabled = true;
 
     if(body != nil) {
         if([body isKindOfClass:[NSDictionary class]] || [body isKindOfClass:[NSArray class]]){
-            [self.requestSerializer setValue:requestContentType forHTTPHeaderField:@"Content-Type"];
+            [self setHeaderValue:requestContentType forKey:@"Content-Type"];
         }
         else if ([body isKindOfClass:[FotitionFile class]]) {}
         else {
@@ -492,7 +492,7 @@ static bool loggingEnabled = true;
             [request setValue:[headerParams valueForKey:key] forHTTPHeaderField:key];
         }
     }
-    [self.requestSerializer setValue:responseContentType forHTTPHeaderField:@"Accept"];
+    [self setHeaderValue:responseContentType forKey:@"Accept"];
 
     // Always disable cookies!
     [request setHTTPShouldHandleCookies:NO];
@@ -509,7 +509,7 @@ static bool loggingEnabled = true;
          if([self executeRequestWithId:requestId]) {
              if(self.logServerResponses)
                  [self logResponse:JSON forRequest:request error:nil];
-             completionBlock(JSON, nil);
+             completionBlock([[operation response] allHeaderFields], JSON, nil);
          }
      } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
          if([self executeRequestWithId:requestId]) {
@@ -522,7 +522,7 @@ static bool loggingEnabled = true;
 
              if(self.logServerResponses)
                  [self logResponse:nil forRequest:request error:augmentedError];
-             completionBlock(nil, augmentedError);
+             completionBlock([[operation response] allHeaderFields], nil, augmentedError);
          }
      }
      ];
@@ -539,13 +539,13 @@ static bool loggingEnabled = true;
                            authSettings: (NSArray *) authSettings
                      requestContentType: (NSString*) requestContentType
                     responseContentType: (NSString*) responseContentType
-                        completionBlock: (void (^)(NSString*, NSError *))completionBlock {
+                        completionBlock: (void (^)(NSDictionary *, NSString*, NSError *))completionBlock {
     
     // save existing header params
-    NSDictionary *tempHeaderParams;
+    NSDictionary *oldHeaderParams;
     
     if ([self.requestSerializer HTTPRequestHeaders]) {
-        tempHeaderParams = [self.requestSerializer HTTPRequestHeaders];
+        oldHeaderParams = [self.requestSerializer HTTPRequestHeaders];
     }
     
     
@@ -563,10 +563,10 @@ static bool loggingEnabled = true;
         NSAssert(false, @"unsupport request type %@", requestContentType);
     }
     
-    //re-assign old params
-    if(tempHeaderParams){
-        for (NSString *key in tempHeaderParams) {
-            [self setValue:tempHeaderParams[key] forKey:key];
+    //re-assign old header params
+    if(oldHeaderParams){
+        for (NSString *key in oldHeaderParams) {
+            [self setValue:oldHeaderParams[key] forKey:key];
         }
     }
 
@@ -685,7 +685,7 @@ static bool loggingEnabled = true;
          if([self executeRequestWithId:requestId]) {
              if(self.logServerResponses)
                  [self logResponse:responseObject forRequest:request error:nil];
-             completionBlock(response, nil);
+             completionBlock([[operation response] allHeaderFields], response, nil);
          }
      } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
          if([self executeRequestWithId:requestId]) {
@@ -698,7 +698,7 @@ static bool loggingEnabled = true;
 
              if(self.logServerResponses)
                  [self logResponse:nil forRequest:request error:augmentedError];
-             completionBlock(nil, augmentedError);
+             completionBlock([[operation response] allHeaderFields], nil, augmentedError);
          }
      }];
 

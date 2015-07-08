@@ -7,13 +7,13 @@
                                         authSettings: authSettings
                                   requestContentType: requestContentType
                                  responseContentType: responseContentType
-                                     completionBlock: ^(NSString *data, NSError *error) {
+                                     completionBlock: ^(NSDictionary *responseHeaders, NSString *data, NSError *error) {
                          if (error) {
-                             completionBlock(nil, error);
+                             completionBlock(responseHeaders, nil, error);
                              return;
                          }
                         {{returnBaseType}} *result = data ? [[{{#instantiationType}}NSClassFromString(@"{{{instantiationType}}}") {{/instantiationType}}{{^instantiationType}}{{{returnBaseType}}} {{/instantiationType}} alloc]initWithString: data] : nil;
-                        completionBlock(result, nil);
+                        completionBlock(responseHeaders, result, nil);
                      }];
     {{/returnBaseType}}
     {{^returnBaseType}}
@@ -25,12 +25,12 @@
                                 headerParams: headerParams
                           requestContentType: requestContentType
                          responseContentType: responseContentType
-                             completionBlock: ^(NSString *data, NSError *error) {
+                             completionBlock: ^(NSDictionary *responseHeaders, NSString *data, NSError *error) {
                 if (error) {
-                    completionBlock(error);
+                    completionBlock(responseHeaders, error);
                     return;
                 }
-                completionBlock(nil);
+                completionBlock(responseHeaders, data, nil);
                     }];
     {{/returnBaseType}}
     

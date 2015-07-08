@@ -183,7 +183,7 @@ extern NSString *const FotitionResponseObjectErrorKey;
             authSettings: (NSArray *) authSettings
       requestContentType:(NSString*) requestContentType
      responseContentType:(NSString*) responseContentType
-         completionBlock:(void (^)(NSDictionary*, NSError *))completionBlock;
+         completionBlock:(void (^)(NSDictionary *, NSDictionary*, NSError *))completionBlock;
 
 /**
  * Perform request
@@ -210,7 +210,7 @@ extern NSString *const FotitionResponseObjectErrorKey;
                            authSettings: (NSArray *) authSettings
                      requestContentType:(NSString*) requestContentType
                     responseContentType:(NSString*) responseContentType
-                        completionBlock:(void (^)(NSString*, NSError *))completionBlock;
+                        completionBlock:(void (^)(NSDictionary *, NSString*, NSError *))completionBlock;
 @end
 
 
