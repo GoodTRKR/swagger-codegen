@@ -3,13 +3,13 @@ package com.fotition.swagger.codegen;
 import io.swagger.codegen.languages.*;
 
 public class FotitionClientCodegen extends ObjcClientCodegen {
+
     protected Set<String> foundationClasses = new HashSet<String>();
     protected String sourceFolder = "client";
     protected String classPrefix = "Fotition";
     protected String projectName = "fotitionClient";
 
-    public ObjcClientCodegen() {
-        super();
+    public FotitionClientCodegen() {
         outputFolder = "generated-code" + File.separator + "objc";
         modelTemplateFiles.put("model-header.mustache", ".h");
         modelTemplateFiles.put("model-body.mustache", ".m");
