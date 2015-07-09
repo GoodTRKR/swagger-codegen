@@ -140,18 +140,18 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
             additionalProperties.put("projectName", projectName);
         }
 
-        supportingFiles.add(new SupportingFile("FotitionObject.h", sourceFolder, "FotitionObject.h"));
-        supportingFiles.add(new SupportingFile("FotitionObject.m", sourceFolder, "FotitionObject.m"));
-        supportingFiles.add(new SupportingFile("FotitionQueryParamCollection.h", sourceFolder, "FotitionQueryParamCollection.h"));
-        supportingFiles.add(new SupportingFile("FotitionQueryParamCollection.m", sourceFolder, "FotitionQueryParamCollection.m"));
-        supportingFiles.add(new SupportingFile("FotitionAPIClient.h", sourceFolder, "FotitionAPIClient.h"));
-        supportingFiles.add(new SupportingFile("FotitionAPIClient.m", sourceFolder, "FotitionAPIClient.m"));
-        supportingFiles.add(new SupportingFile("FotitionFile.h", sourceFolder, "FotitionFile.h"));
-        supportingFiles.add(new SupportingFile("FotitionFile.m", sourceFolder, "FotitionFile.m"));
+        supportingFiles.add(new SupportingFile("FTObject.h", sourceFolder, "FTObject.h"));
+        supportingFiles.add(new SupportingFile("FTObject.m", sourceFolder, "FTObject.m"));
+        supportingFiles.add(new SupportingFile("FTQueryParamCollection.h", sourceFolder, "FTQueryParamCollection.h"));
+        supportingFiles.add(new SupportingFile("FTQueryParamCollection.m", sourceFolder, "FTQueryParamCollection.m"));
+        supportingFiles.add(new SupportingFile("FTAPIClient.h", sourceFolder, "FTAPIClient.h"));
+        supportingFiles.add(new SupportingFile("FTAPIClient.m", sourceFolder, "FTAPIClient.m"));
+        supportingFiles.add(new SupportingFile("FTFile.h", sourceFolder, "FTFile.h"));
+        supportingFiles.add(new SupportingFile("FTFile.m", sourceFolder, "FTFile.m"));
         supportingFiles.add(new SupportingFile("JSONValueTransformer+ISO8601.m", sourceFolder, "JSONValueTransformer+ISO8601.m"));
         supportingFiles.add(new SupportingFile("JSONValueTransformer+ISO8601.h", sourceFolder, "JSONValueTransformer+ISO8601.h"));
-        supportingFiles.add(new SupportingFile("FotitionConfiguration-body.mustache", sourceFolder, "FotitionConfiguration.m"));
-        supportingFiles.add(new SupportingFile("FotitionConfiguration-header.mustache", sourceFolder, "FotitionConfiguration.h"));
+        supportingFiles.add(new SupportingFile("FTConfiguration-body.mustache", sourceFolder, "FTConfiguration.m"));
+        supportingFiles.add(new SupportingFile("FTConfiguration-header.mustache", sourceFolder, "FTConfiguration.h"));
         supportingFiles.add(new SupportingFile("Podfile.mustache", "", "Podfile"));
     }
 
@@ -208,7 +208,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
             }
 
             // In this codition, type of property p is array of model,
-            // return container type combine inner type with pointer, e.g. `NSArray<FotitionTag>*'
+            // return container type combine inner type with pointer, e.g. `NSArray<FTTag>*'
             String innerTypeDeclaration = getTypeDeclaration(inner);
 
             if (innerTypeDeclaration.endsWith("*")) {
@@ -230,8 +230,8 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
             else if (languageSpecificPrimitives.contains(swaggerType)) {
                 return swaggerType;
             }
-            // In this codition, type of p is objective-c object type, e.g. `FotitionPet',
-            // return type of p with pointer, e.g. `FotitionPet*'
+            // In this codition, type of p is objective-c object type, e.g. `FTPet',
+            // return type of p with pointer, e.g. `FTPet*'
             else {
                 return swaggerType + "*";
             }
