@@ -8,8 +8,8 @@
                          responseContentType: responseContentType
                              completionBlock: ^(NSDictionary *responseHeaders, NSString *data, NSError *error) {
                 if (error) {
-                    completionBlock(responseHeaders, nil, error);
+                    completionBlock(responseHeaders, error);
                     return;
                 }
-                completionBlock(responseHeaders, data, nil);
+                completionBlock(responseHeaders, nil);
                     }];

@@ -78,7 +78,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
         typeMapping.put("enum", "NSString");
         typeMapping.put("Date", "NSDate");
         typeMapping.put("DateTime", "NSDate");
-        typeMapping.put("boolean", "BOOL");
+        typeMapping.put("boolean", "NSNumber");
         typeMapping.put("string", "NSString");
         typeMapping.put("integer", "NSNumber");
         typeMapping.put("int", "NSNumber");
