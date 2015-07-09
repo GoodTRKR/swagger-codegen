@@ -144,8 +144,8 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
         supportingFiles.add(new SupportingFile("FTObject.m", sourceFolder, "FTObject.m"));
         supportingFiles.add(new SupportingFile("FTQueryParamCollection.h", sourceFolder, "FTQueryParamCollection.h"));
         supportingFiles.add(new SupportingFile("FTQueryParamCollection.m", sourceFolder, "FTQueryParamCollection.m"));
-        supportingFiles.add(new SupportingFile("FTAPIClient.h", sourceFolder, "FTAPIClient.h"));
-        supportingFiles.add(new SupportingFile("FTAPIClient.m", sourceFolder, "FTAPIClient.m"));
+        supportingFiles.add(new SupportingFile("FotitionAPIClient.h", sourceFolder, "FotitionAPIClient.h"));
+        supportingFiles.add(new SupportingFile("FotitionAPIClient.m", sourceFolder, "FotitionAPIClient.m"));
         supportingFiles.add(new SupportingFile("FTFile.h", sourceFolder, "FTFile.h"));
         supportingFiles.add(new SupportingFile("FTFile.m", sourceFolder, "FTFile.m"));
         supportingFiles.add(new SupportingFile("JSONValueTransformer+ISO8601.m", sourceFolder, "JSONValueTransformer+ISO8601.m"));
