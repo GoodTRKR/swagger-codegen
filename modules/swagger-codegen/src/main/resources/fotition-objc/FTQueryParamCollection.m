@@ -1,6 +1,6 @@
-#import "FotitionQueryParamCollection.h"
+#import "FTQueryParamCollection.h"
 
-@implementation FotitionQueryParamCollection
+@implementation FTQueryParamCollection
 
 @synthesize values = _values;
 @synthesize format = _format;

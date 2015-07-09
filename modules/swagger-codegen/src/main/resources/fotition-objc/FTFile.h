@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-@interface FotitionFile : NSObject
+@interface FTFile : NSObject
 
 @property(nonatomic, readonly) NSString* name;
 @property(nonatomic, readonly) NSString* mimeType;

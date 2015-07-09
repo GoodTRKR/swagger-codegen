@@ -1,7 +1,7 @@
 #import "FotitionAPIClient.h"
-#import "FotitionFile.h"
-#import "FotitionQueryParamCollection.h"
-#import "FotitionConfiguration.h"
+#import "FTFile.h"
+#import "FTQueryParamCollection.h"
+#import "FTConfiguration.h"
 
 @implementation FotitionAPIClient
 
@@ -274,8 +274,8 @@ static bool loggingEnabled = true;
                 [requestUrl appendString:[NSString stringWithFormat:@"%@%@=%@", separator,
                                           [FotitionAPIClient escape:key], [FotitionAPIClient escape:[queryParams valueForKey:key]]]];
             }
-            else if([queryParam isKindOfClass:[FotitionQueryParamCollection class]]){
-                FotitionQueryParamCollection * coll = (FotitionQueryParamCollection*) queryParam;
+            else if([queryParam isKindOfClass:[FTQueryParamCollection class]]){
+                FTQueryParamCollection * coll = (FTQueryParamCollection*) queryParam;
                 NSArray* values = [coll values];
                 NSString* format = [coll format];
 
@@ -333,7 +333,7 @@ static bool loggingEnabled = true;
     NSMutableDictionary *headersWithAuth = [NSMutableDictionary dictionaryWithDictionary:*headers];
     NSMutableDictionary *querysWithAuth = [NSMutableDictionary dictionaryWithDictionary:*querys];
     
-    FotitionConfiguration *config = [FotitionConfiguration sharedConfig];
+    FTConfiguration *config = [FTConfiguration sharedConfig];
     for (NSString *auth in authSettings) {
         NSDictionary *authSetting = [[config authSettings] objectForKey:auth];
         
@@ -405,11 +405,11 @@ static bool loggingEnabled = true;
 
     NSMutableURLRequest * request = nil;
     if (body != nil && [body isKindOfClass:[NSArray class]]){
-        FotitionFile * file;
+        FTFile * file;
         NSMutableDictionary * params = [[NSMutableDictionary alloc] init];
         for(id obj in body) {
-            if([obj isKindOfClass:[FotitionFile class]]) {
-                file = (FotitionFile*) obj;
+            if([obj isKindOfClass:[FTFile class]]) {
+                file = (FTFile*) obj;
                 requestContentType = @"multipart/form-data";
             }
             else if([obj isKindOfClass:[NSDictionary class]]) {
@@ -482,7 +482,7 @@ static bool loggingEnabled = true;
         if([body isKindOfClass:[NSDictionary class]] || [body isKindOfClass:[NSArray class]]){
             [self setHeaderValue:requestContentType forKey:@"Content-Type"];
         }
-        else if ([body isKindOfClass:[FotitionFile class]]) {}
+        else if ([body isKindOfClass:[FTFile class]]) {}
         else {
             NSAssert(false, @"unsupported post type!");
         }
@@ -583,11 +583,11 @@ static bool loggingEnabled = true;
 
     NSMutableURLRequest * request = nil;
     if (body != nil && [body isKindOfClass:[NSArray class]]){
-        FotitionFile * file;
+        FTFile * file;
         NSMutableDictionary * params = [[NSMutableDictionary alloc] init];
         for(id obj in body) {
-            if([obj isKindOfClass:[FotitionFile class]]) {
-                file = (FotitionFile*) obj;
+            if([obj isKindOfClass:[FTFile class]]) {
+                file = (FTFile*) obj;
                 requestContentType = @"multipart/form-data";
             }
             else if([obj isKindOfClass:[NSDictionary class]]) {
@@ -662,7 +662,7 @@ static bool loggingEnabled = true;
         if([body isKindOfClass:[NSDictionary class]] || [body isKindOfClass:[NSArray class]]){
             [self.requestSerializer setValue:requestContentType forHTTPHeaderField:@"Content-Type"];
         }
-        else if ([body isKindOfClass:[FotitionFile class]]){}
+        else if ([body isKindOfClass:[FTFile class]]){}
         else {
             NSAssert(false, @"unsupported post type!");
         }

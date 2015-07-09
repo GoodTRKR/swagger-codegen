@@ -1,6 +1,6 @@
-#import "FotitionFile.h"
+#import "FTFile.h"
 
-@implementation FotitionFile
+@implementation FTFile
 
 @synthesize name = _name;
 @synthesize mimeType = _mimeType;

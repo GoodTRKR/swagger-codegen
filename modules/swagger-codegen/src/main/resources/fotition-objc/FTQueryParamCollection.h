@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-@interface FotitionQueryParamCollection : NSObject
+@interface FTQueryParamCollection : NSObject
 
 @property(nonatomic, readonly) NSArray* values;
 @property(nonatomic, readonly) NSString* format;

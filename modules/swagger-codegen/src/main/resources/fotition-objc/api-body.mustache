@@ -1,7 +1,7 @@
 {{#operations}}
 #import "{{classname}}.h"
-#import "FotitionFile.h"
-#import "FotitionQueryParamCollection.h"
+#import "FTFile.h"
+#import "FTQueryParamCollection.h"
 {{#imports}}#import "{{import}}.h"
 {{/imports}}
 {{newline}}
@@ -102,7 +102,7 @@ static NSString * basePath = @"{{basePath}}";
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
     {{#queryParams}}if({{paramName}} != nil) {
         {{#collectionFormat}}
-        queryParams[@"{{baseName}}"] = [[FotitionQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
+        queryParams[@"{{baseName}}"] = [[FTQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
         {{/collectionFormat}}
         {{^collectionFormat}}queryParams[@"{{baseName}}"] = {{paramName}};{{/collectionFormat}}
     }
@@ -142,7 +142,7 @@ static NSString * basePath = @"{{basePath}}";
         NSMutableArray * objs = [[NSMutableArray alloc] init];
         for (id dict in (NSArray*)__body) {
             if([dict respondsToSelector:@selector(toDictionary)]) {
-                [objs addObject:[(FotitionObject*)dict toDictionary]];
+                [objs addObject:[(FTObject*)dict toDictionary]];
             }
             else{
                 [objs addObject:dict];
@@ -151,7 +151,7 @@ static NSString * basePath = @"{{basePath}}";
         bodyDictionary = objs;
     }
     else if([__body respondsToSelector:@selector(toDictionary)]) {
-        bodyDictionary = [(FotitionObject*)__body toDictionary];
+        bodyDictionary = [(FTObject*)__body toDictionary];
     }
     else if([__body isKindOfClass:[NSString class]]) {
         // convert it to a dictionary

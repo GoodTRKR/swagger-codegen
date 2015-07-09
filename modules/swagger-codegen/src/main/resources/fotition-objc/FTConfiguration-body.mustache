@@ -1,18 +1,18 @@
-#import "FotitionConfiguration.h"
+#import "FTConfiguration.h"
 
-@interface FotitionConfiguration ()
+@interface FTConfiguration ()
 
 @property (readwrite, nonatomic, strong) NSMutableDictionary *mutableApiKey;
 @property (readwrite, nonatomic, strong) NSMutableDictionary *mutableApiKeyPrefix;
 
 @end
 
-@implementation FotitionConfiguration
+@implementation FTConfiguration
 
 #pragma mark - Singletion Methods
 
 + (instancetype) sharedConfig {
-    static FotitionConfiguration *shardConfig = nil;
+    static FTConfiguration *shardConfig = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         shardConfig = [[self alloc] init];

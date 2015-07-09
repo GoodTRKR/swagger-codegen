@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
 #import "JSONModel.h"
 
-@interface FotitionObject : JSONModel
+@interface FTObject : JSONModel
 @end

@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import "FotitionObject.h"
+#import "FTObject.h"
 {{#imports}}#import "{{import}}.h"
 {{/imports}}
 {{newline}}
@@ -9,7 +9,7 @@
 @protocol {{classname}}
 @end
   
-@interface {{classname}} : FotitionObject
+@interface {{classname}} : FTObject
 
 {{#vars}}
 {{#description}}/* {{{description}}} {{^required}}[optional]{{/required}}
