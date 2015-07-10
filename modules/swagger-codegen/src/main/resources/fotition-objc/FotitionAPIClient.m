@@ -363,14 +363,6 @@ static bool loggingEnabled = true;
      responseContentType: (NSString*) responseContentType
          completionBlock: (void (^)(NSDictionary *, NSDictionary*, NSError *))completionBlock {
     
-    
-    // save existing header params
-    NSDictionary *oldHeaderParams;
-    
-    if ([self.requestSerializer HTTPRequestHeaders]) {
-        oldHeaderParams = [self.requestSerializer HTTPRequestHeaders];
-    }
-    
     // setting request serializer
     if ([requestContentType isEqualToString:@"application/json"]) {
         self.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -383,13 +375,6 @@ static bool loggingEnabled = true;
     }
     else {
         NSAssert(false, @"unsupport request type %@", requestContentType);
-    }
-    
-    //re-assign old params
-    if(oldHeaderParams){
-        for (NSString *key in oldHeaderParams) {
-            [self setValue:oldHeaderParams[key] forKey:key];
-        }
     }
 
     // setting response serializer
@@ -541,14 +526,6 @@ static bool loggingEnabled = true;
                     responseContentType: (NSString*) responseContentType
                         completionBlock: (void (^)(NSDictionary *, NSString*, NSError *))completionBlock {
     
-    // save existing header params
-    NSDictionary *oldHeaderParams;
-    
-    if ([self.requestSerializer HTTPRequestHeaders]) {
-        oldHeaderParams = [self.requestSerializer HTTPRequestHeaders];
-    }
-    
-    
     // setting request serializer
     if ([requestContentType isEqualToString:@"application/json"]) {
         self.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -561,13 +538,6 @@ static bool loggingEnabled = true;
     }
     else {
         NSAssert(false, @"unsupport request type %@", requestContentType);
-    }
-    
-    //re-assign old header params
-    if(oldHeaderParams){
-        for (NSString *key in oldHeaderParams) {
-            [self setValue:oldHeaderParams[key] forKey:key];
-        }
     }
 
     // setting response serializer
