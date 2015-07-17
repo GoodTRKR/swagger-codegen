@@ -99,7 +99,7 @@ static NSString * basePath = @"{{basePath}}";
     {{#pathParams}}[requestUrl replaceCharactersInRange: [requestUrl rangeOfString:[NSString stringWithFormat:@"%@%@%@", @"{", @"{{baseName}}", @"}"]] withString: [FotitionAPIClient escape:{{paramName}}]];
     {{/pathParams}}
 
-    NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary* queryParams __attribute__((unused)) = [[NSMutableDictionary alloc] init];
     {{#queryParams}}if({{paramName}} != nil) {
         {{#collectionFormat}}
         queryParams[@"{{baseName}}"] = [[FTQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
@@ -107,7 +107,7 @@ static NSString * basePath = @"{{basePath}}";
         {{^collectionFormat}}queryParams[@"{{baseName}}"] = {{paramName}};{{/collectionFormat}}
     }
     {{/queryParams}}
-    NSMutableDictionary* headerParams = [NSMutableDictionary dictionaryWithDictionary:self.defaultHeaders];
+    NSMutableDictionary* headerParams __attribute__((unused)) = [NSMutableDictionary dictionaryWithDictionary:self.defaultHeaders];
 
     {{#headerParams}}if({{paramName}} != nil)
         headerParams[@"{{baseName}}"] = {{paramName}};
@@ -166,7 +166,7 @@ static NSString * basePath = @"{{basePath}}";
     {{/bodyParam}}
     {{^bodyParam}}
 
-    NSMutableDictionary * formParams = [[NSMutableDictionary alloc]init];
+    NSMutableDictionary * formParams __attribute__((unused)) = [[NSMutableDictionary alloc]init];
 
     {{#formParams}}
     if(bodyDictionary == nil) {
@@ -174,7 +174,8 @@ static NSString * basePath = @"{{basePath}}";
     }
     {{#notFile}}
     if ([{{paramName}} isKindOfClass:[NSNumber class]]){
-        formParams[@"{{paramName}}"] = [{{paramName}} stringValue];
+        NSNumber *num = (NSNumber *){{paramName}};
+        formParams[@"{{paramName}}"] = [num stringValue];
     }else{ 
         formParams[@"{{paramName}}"] = {{paramName}};
     }
