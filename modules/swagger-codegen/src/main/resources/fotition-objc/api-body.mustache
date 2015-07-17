@@ -169,22 +169,26 @@ static NSString * basePath = @"{{basePath}}";
     NSMutableDictionary * formParams = [[NSMutableDictionary alloc]init];
 
     {{#formParams}}
-    {{#notFile}}
-    formParams[@"{{paramName}}"] = {{paramName}};
-    {{/notFile}}{{#isFile}}
-    requestContentType = @"multipart/form-data";
     if(bodyDictionary == nil) {
       bodyDictionary = [[NSMutableArray alloc] init];
     }
+    {{#notFile}}
+    if ([{{paramName}} isKindOfClass:[NSNumber class]]){
+        formParams[@"{{paramName}}"] = [{{paramName}} stringValue];
+    }else{ 
+        formParams[@"{{paramName}}"] = {{paramName}};
+    }
+
+    [bodyDictionary addObject:formParams[@"{{paramName}}"]];
+
+    {{/notFile}}{{#isFile}}
+    requestContentType = @"multipart/form-data";
+
     if({{paramName}} != nil) {
       [bodyDictionary addObject:{{paramName}}];
       {{paramName}}.paramName  = @"{{baseName}}";
     }
     {{/isFile}}
-    if(bodyDictionary == nil) {
-      bodyDictionary = [[NSMutableArray alloc] init];
-    }
-    [bodyDictionary addObject:formParams];
     {{/formParams}}
     {{/bodyParam}}
 
