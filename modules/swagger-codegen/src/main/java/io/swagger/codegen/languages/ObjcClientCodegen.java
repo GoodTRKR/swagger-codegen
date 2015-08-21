@@ -117,6 +117,10 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
         cliOptions.add(new CliOption("classPrefix", "prefix for generated classes (convention: Abbreviation of pod name e.g. `HN` for `HackerNews`), default: `SWG`"));
         cliOptions.add(new CliOption("podName", "cocoapods package name (convention: CameCase), default: `SwaggerClient`"));
         cliOptions.add(new CliOption("podVersion", "cocoapods package version, default: `1.0.0`"));
+        cliOptions.add(new CliOption("authorName", "Name to use in the podspec file, default: `Swagger`"));
+        cliOptions.add(new CliOption("authorEmail", "Email to use in the podspec file, default: `swagger@swagger.io`"));
+        cliOptions.add(new CliOption("gitRepoURL", "URL for the git repo where this podspec should point to, default: `https://github.com/swagger-api/swagger-codegen`"));
+        cliOptions.add(new CliOption("license", "License to use in the podspec file, default: `MIT`"));
     }
 
     public CodegenType getTag() {
