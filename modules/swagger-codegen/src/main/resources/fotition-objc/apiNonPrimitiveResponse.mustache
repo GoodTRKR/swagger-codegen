@@ -1,0 +1,24 @@
+    {{^returnTypeIsPrimitive}}
+    // comples response type
+    return [self.apiClient dictionary: requestUrl
+                       method: @"{{httpMethod}}"
+                  queryParams: queryParams
+                         body: bodyDictionary
+                 headerParams: headerParams
+                 authSettings: authSettings
+           requestContentType: requestContentType
+          responseContentType: responseContentType
+              completionBlock: ^(NSDictionary *responseHeaders, NSDictionary *data, NSError *error) {
+                if (error) {
+                    {{#returnBaseType}}completionBlock(responseHeaders, nil, error);{{/returnBaseType}}
+                    {{^returnBaseType}}completionBlock(responseHeaders, error);{{/returnBaseType}}
+                    return;
+                }
+                {{#returnType}}{{returnType}} result = nil;
+                if (data) {
+                    result = [[{{#instantiationType}}NSClassFromString(@"{{{instantiationType}}}") {{/instantiationType}}{{^instantiationType}}{{{returnBaseType}}} {{/instantiationType}} alloc] {{#returnContainer}}{{#isMapContainer}}initWithDictionary{{/isMapContainer}}{{#isListContainer}} initWithDictionary{{/isListContainer}}{{/returnContainer}}{{^returnContainer}} initWithDictionary{{/returnContainer}}:data error:nil];
+                }
+                {{#returnType}}completionBlock(responseHeaders, result , nil);{{/returnType}}
+                {{/returnType}}
+              }];
+    {{/returnTypeIsPrimitive}}

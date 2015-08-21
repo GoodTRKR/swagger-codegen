@@ -1,0 +1,235 @@
+{{#operations}}
+#import "{{classname}}.h"
+#import "FTFile.h"
+#import "FTQueryParamCollection.h"
+{{#imports}}#import "{{import}}.h"
+{{/imports}}
+{{newline}}
+
+@interface {{classname}} ()
+    @property (readwrite, nonatomic, strong) NSMutableDictionary *defaultHeaders;
+@end
+
+@implementation {{classname}}
+
+static NSString * basePath = @"{{basePath}}";
+
+#pragma mark - Initialize methods
+
+- (id) init {
+    self = [super init];
+    if (self) {
+        self.apiClient = [FotitionAPIClient sharedClientFromPool:basePath];
+        self.defaultHeaders = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (id) initWithApiClient:(FotitionAPIClient *)apiClient {
+    self = [super init];
+    if (self) {
+        if (apiClient) {
+            self.apiClient = apiClient;
+        }
+        else {
+            self.apiClient = [FotitionAPIClient sharedClientFromPool:basePath];
+        }
+        self.defaultHeaders = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+#pragma mark -
+
++({{classname}}*) apiWithHeader:(NSString*)headerValue key:(NSString*)key {
+    static {{classname}}* singletonAPI = nil;
+
+    if (singletonAPI == nil) {
+        singletonAPI = [[{{classname}} alloc] init];
+        [singletonAPI addHeader:headerValue forKey:key];
+    }
+    return singletonAPI;
+}
+
++(void) setBasePath:(NSString*)path {
+    basePath = path;
+}
+
++(NSString*) getBasePath {
+    return basePath;
+}
+
+-(void) addHeader:(NSString*)value forKey:(NSString*)key {
+    [self.defaultHeaders setValue:value forKey:key];
+}
+
+-(void) setHeaderValue:(NSString*) value
+           forKey:(NSString*)key {
+    [self.defaultHeaders setValue:value forKey:key];
+}
+
+-(unsigned long) requestQueueSize {
+    return [FotitionAPIClient requestQueueSize];
+}
+
+
+{{#operation}}
+/*!
+ * {{{summary}}}
+ * {{{notes}}}
+{{#allParams}} * \param {{paramName}} {{{description}}}
+{{/allParams}} * \returns {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}
+ */
+-(NSNumber*) {{nickname}}WithCompletionBlock{{^allParams}}: {{/allParams}}{{#allParams}}{{#secondaryParam}} {{paramName}}{{/secondaryParam}}: ({{{dataType}}}) {{paramName}}
+        {{/allParams}}
+        {{#returnBaseType}}{{#hasParams}}completionHandler: {{/hasParams}}(void (^)(NSDictionary *responseHeaders, {{{returnType}}} output, NSError* error))completionBlock{{/returnBaseType}}
+        {{^returnBaseType}}{{#hasParams}}completionHandler: {{/hasParams}}(void (^)(NSDictionary *responseHeaders, NSError* error))completionBlock{{/returnBaseType}} {
+
+    {{#allParams}}{{#required}}
+    // verify the required parameter '{{paramName}}' is set
+    NSAssert({{paramName}} != nil, @"Missing the required parameter `{{paramName}}` when calling {{nickname}}");
+    {{/required}}{{/allParams}}
+
+    NSMutableString* requestUrl = [NSMutableString stringWithFormat:@"%@{{path}}", basePath];
+
+    // remove format in URL if needed
+    if ([requestUrl rangeOfString:@".{format}"].location != NSNotFound)
+        [requestUrl replaceCharactersInRange: [requestUrl rangeOfString:@".{format}"] withString:@".json"];
+
+    {{#pathParams}}[requestUrl replaceCharactersInRange: [requestUrl rangeOfString:[NSString stringWithFormat:@"%@%@%@", @"{", @"{{baseName}}", @"}"]] withString: [FotitionAPIClient escape:{{paramName}}]];
+    {{/pathParams}}
+
+    NSMutableDictionary* queryParams __attribute__((unused)) = [[NSMutableDictionary alloc] init];
+    {{#queryParams}}if({{paramName}} != nil) {
+        {{#collectionFormat}}
+        queryParams[@"{{baseName}}"] = [[FTQueryParamCollection alloc] initWithValuesAndFormat: {{baseName}} format: @"{{collectionFormat}}"];
+        {{/collectionFormat}}
+        {{^collectionFormat}}queryParams[@"{{baseName}}"] = {{paramName}};{{/collectionFormat}}
+    }
+    {{/queryParams}}
+    NSMutableDictionary* headerParams __attribute__((unused)) = [NSMutableDictionary dictionaryWithDictionary:self.defaultHeaders];
+
+    {{#headerParams}}if({{paramName}} != nil)
+        headerParams[@"{{baseName}}"] = {{paramName}};
+    {{/headerParams}}
+    
+    // HTTP header `Accept` 
+    headerParams[@"Accept"] = [FotitionAPIClient selectHeaderAccept:@[{{#produces}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}}]];
+    if ([headerParams[@"Accept"] length] == 0) {
+        [headerParams removeObjectForKey:@"Accept"];
+    }
+
+    // response content type
+    NSString *responseContentType;
+    if ([headerParams objectForKey:@"Accept"]) {
+        responseContentType = [headerParams[@"Accept"] componentsSeparatedByString:@", "][0];
+    }
+    else {
+        responseContentType = @"";
+    }
+
+    // request content type
+    NSString *requestContentType = [FotitionAPIClient selectHeaderContentType:@[{{#consumes}}@"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/consumes}}]];
+
+    // Authentication setting
+    NSArray *authSettings = @[{{#authMethods}}@"{{name}}"{{#hasMore}}, {{/hasMore}}{{/authMethods}}];
+    
+    id bodyDictionary = nil;
+    {{#bodyParam}}
+    id __body = {{paramName}};
+
+    if(__body != nil && [__body isKindOfClass:[NSArray class]]){
+        NSMutableArray * objs = [[NSMutableArray alloc] init];
+        for (id dict in (NSArray*)__body) {
+            if([dict respondsToSelector:@selector(toDictionary)]) {
+                [objs addObject:[(FTObject*)dict toDictionary]];
+            }
+            else{
+                [objs addObject:dict];
+            }
+        }
+        bodyDictionary = objs;
+    }
+    else if([__body respondsToSelector:@selector(toDictionary)]) {
+        bodyDictionary = [(FTObject*)__body toDictionary];
+    }
+    else if([__body isKindOfClass:[NSString class]]) {
+        // convert it to a dictionary
+        NSError * error;
+        NSString * str = (NSString*)__body;
+        NSDictionary *JSON =
+            [NSJSONSerialization JSONObjectWithData: [str dataUsingEncoding: NSUTF8StringEncoding]
+                                            options: NSJSONReadingMutableContainers
+                                              error: &error];
+        bodyDictionary = JSON;
+    }
+    {{/bodyParam}}
+    {{^bodyParam}}
+
+    NSMutableDictionary * formParams __attribute__((unused)) = [[NSMutableDictionary alloc]init];
+
+    if(bodyDictionary == nil) {
+      bodyDictionary = [[NSMutableArray alloc] init];
+    }
+    {{#formParams}}
+    {{#notFile}}
+    if ([{{paramName}} isKindOfClass:[NSNumber class]]){
+        NSNumber *num = (NSNumber *){{paramName}};
+        formParams[@"{{paramName}}"] = [num stringValue];
+    }else{ 
+        formParams[@"{{paramName}}"] = {{paramName}};
+    }
+
+
+    {{/notFile}}{{#isFile}}
+    requestContentType = @"multipart/form-data";
+
+    if({{paramName}} != nil) {
+      [bodyDictionary addObject:{{paramName}}];
+      {{paramName}}.paramName  = @"{{baseName}}";
+    }
+    {{/isFile}}
+    {{/formParams}}
+
+    [bodyDictionary addObject:formParams];
+
+    {{/bodyParam}}
+
+    {{#requiredParamCount}}
+    {{#requiredParams}}
+    if({{paramName}} == nil) {
+        // error
+    }
+    {{/requiredParams}}
+    {{/requiredParamCount}}
+
+    {{#returnContainer}}
+    // response is in a container
+    {{>apiBodyResponseWithContainer}}{{/returnContainer}}
+
+    {{#returnSimpleType}}
+    // non container response
+
+    {{#returnTypeIsPrimitive}}
+    // primitive response
+    {{>apiPrimitiveResponse}}{{/returnTypeIsPrimitive}}
+
+    {{#returnBaseType}}
+    // complex response
+    {{>apiNonPrimitiveResponse}}{{/returnBaseType}}
+    {{/returnSimpleType}}
+
+    {{^returnSimpleType}}{{^returnContainer}}
+    // it's void
+    {{>voidResponse}}
+    {{/returnContainer}}{{/returnSimpleType}}
+}
+
+{{/operation}}
+
+{{newline}}
+{{/operations}}
+@end
+
+
+

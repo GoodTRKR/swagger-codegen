@@ -31,7 +31,7 @@ The Swagger Specification has undergone 3 revisions since initial creation in 20
 
 Swagger Codegen Version | Release Date | Swagger Spec compatibility | Notes
 ----------------------- | ------------ | -------------------------- | -----
-2.1.0                   | 2015-06-09   | 1.0, 1.1, 1.2, 2.0   | [master](https://github.com/swagger-api/swagger-codegen)
+2.1.2                   | 2015-06-09   | 1.0, 1.1, 1.2, 2.0   | [master](https://github.com/swagger-api/swagger-codegen)
 2.0.17                  | 2014-08-22   | 1.1, 1.2      | [tag v2.0.17](https://github.com/swagger-api/swagger-codegen/tree/v2.0.17)
 1.0.4                   | 2012-04-12   | 1.0, 1.1      | [tag v1.0.4](https://github.com/swagger-api/swagger-codegen/tree/swagger-codegen_2.9.1-1.1)
 
@@ -156,7 +156,7 @@ You can look at `modules/swagger-codegen/src/main/resources/${your-language}` fo
 If you're starting a project with a new language and don't see what you need, swagger-codegen can help you create a project to generate your own libraries:
 
 ```
-java -jar modules/swagger-codegen-distribution/target/swagger-codegen-cli.jar meta \
+java -jar modules/swagger-codegen-cli/target/swagger-codegen-cli.jar meta \
   -o output/myLibrary -n myClientCodegen -p com.my.company.codegen
 ```
 
