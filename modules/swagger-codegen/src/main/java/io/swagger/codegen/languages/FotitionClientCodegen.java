@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 
 public class FotitionClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected Set<String> foundationClasses = new HashSet<String>();
@@ -23,10 +25,10 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
     protected String podVersion = "1.0.0";
     protected String classPrefix = "FT";
     
-    public ObjcClientCodegen() {
+    public FotitionClientCodegen() {
         super();
         
-        outputFolder = "generated-code" + File.separator + "objc";
+        outputFolder = "generated-code" + File.separator + "fotition-objc";
         modelTemplateFiles.put("model-header.mustache", ".h");
         modelTemplateFiles.put("model-body.mustache", ".m");
         apiTemplateFiles.put("api-header.mustache", ".h");
@@ -118,7 +120,7 @@ public class FotitionClientCodegen extends DefaultCodegen implements CodegenConf
     }
     
     public String getName() {
-        return "objc";
+        return "fotition-objc";
     }
     
     public String getHelp() {
