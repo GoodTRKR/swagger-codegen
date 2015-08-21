@@ -23,6 +23,11 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected String podName = "SwaggerClient";
     protected String podVersion = "1.0.0";
     protected String classPrefix = "SWG";
+    protected String authorName = "Swagger";
+    protected String authorEmail = "swagger@swagger.io";
+    protected String license = "MIT";
+    protected String gitRepoURL = "https://github.com/swagger-api/swagger-codegen";
+    
 
     public ObjcClientCodegen() {
         super();
@@ -141,10 +146,30 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
         if (additionalProperties.containsKey("classPrefix")) {
             setClassPrefix((String) additionalProperties.get("classPrefix"));
         }
+        
+        if (additionalProperties.containsKey("authorName")) {
+            setAuthorName((String) additionalProperties.get("authorName"));
+        }
+        
+        if (additionalProperties.containsKey("authorEmail")) {
+            setAuthorEmail((String) additionalProperties.get("authorEmail"));
+        }
+        
+        if (additionalProperties.containsKey("gitRepoURL")) {
+            setGitRepoURL((String) additionalProperties.get("gitRepoURL"));
+        }
+
+        if (additionalProperties.containsKey("license")) {
+            setLicense((String) additionalProperties.get("license"));
+        }
 
         additionalProperties.put("podName", podName);
         additionalProperties.put("podVersion", podVersion);
         additionalProperties.put("classPrefix", classPrefix);
+        additionalProperties.put("authorName", authorName);
+        additionalProperties.put("authorEmail", authorEmail);
+        additionalProperties.put("gitRepoURL", gitRepoURL);
+        additionalProperties.put("license", license);
 
         String swaggerFolder = podName;
 
@@ -384,5 +409,21 @@ public class ObjcClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     public void setPodVersion(String podVersion) {
         this.podVersion = podVersion;
+    }
+
+    public void setAuthorEmail(String authorEmail) {
+        this.authorEmail = authorEmail;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    public void setGitRepoURL(String gitRepoURL) {
+        this.gitRepoURL = gitRepoURL;
+    }
+
+    public void setLicense(String license) {
+        this.license = license;
     }
 }
