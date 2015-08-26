@@ -149,7 +149,11 @@ static {{classname}}* singletonAPI = nil;
     {{#formParams}}
     {{#notFile}}
     if ({{paramName}}) {
-        formParams[@"{{baseName}}"] = {{paramName}};
+        if ([{{paramName}} isKindOfClass:[NSNumber class]]){
+            formParams[@"{{baseName}}"] = [{{paramName}} stringValue];
+        }else{
+            formParams[@"{{baseName}}"] = {{paramName}};
+        }
     }
     {{/notFile}}{{#isFile}}
     files[@"{{paramName}}"] = {{paramName}};
