@@ -378,14 +378,17 @@ static void (^reachabilityChangeBlock)(int);
 
 - (void) operationWithCompletionBlock: (NSURLRequest *)request
                             requestId: (NSNumber *) requestId
-                      completionBlock: (void (^)(id, NSError *))completionBlock {
+                      completionBlock: (void (^)(NSDictionary *, id, NSError *))completionBlock {
     AFHTTPRequestOperation *op = [self HTTPRequestOperationWithRequest:request
                                                                success:^(AFHTTPRequestOperation *operation, id response) {
                                                                    if([self executeRequestWithId:requestId]) {
                                                                        if([[{{classPrefix}}Configuration sharedConfig] debug]) {
                                                                            [self logResponse:operation forRequest:request error:nil];
                                                                        }
-                                                                       completionBlock(response, nil);
+
+                                                                        NSDictionary *responseHeaders = [[operation response] allHeaderFields];
+
+                                                                       completionBlock(responseHeaders, response, nil);
                                                                    }
                                                                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                                                                    if([self executeRequestWithId:requestId]) {
@@ -398,7 +401,10 @@ static void (^reachabilityChangeBlock)(int);
 
                                                                        if([[{{classPrefix}}Configuration sharedConfig] debug])
                                                                            [self logResponse:nil forRequest:request error:augmentedError];
-                                                                       completionBlock(nil, augmentedError);
+
+                                                                        NSDictionary *responseHeaders = [[operation response] allHeaderFields];
+
+                                                                       completionBlock(responseHeaders, nil, augmentedError);
                                                                    }
                                                                }];
 
@@ -407,7 +413,7 @@ static void (^reachabilityChangeBlock)(int);
 
 - (void) downloadOperationWithCompletionBlock: (NSURLRequest *)request
                                     requestId: (NSNumber *) requestId
-                              completionBlock: (void (^)(id, NSError *))completionBlock {
+                              completionBlock: (void (^)(NSDictionary *, id, NSError *))completionBlock {
     AFHTTPRequestOperation *op = [self HTTPRequestOperationWithRequest:request
                                                                success:^(AFHTTPRequestOperation *operation, id responseObject) {
                                                                    {{classPrefix}}Configuration *config = [{{classPrefix}}Configuration sharedConfig];
@@ -441,7 +447,8 @@ static void (^reachabilityChangeBlock)(int);
                                                                    NSURL *file = [NSURL fileURLWithPath:filepath];
 
                                                                    [operation.responseData writeToURL:file atomically:YES];
-                                                                   completionBlock(file, nil);
+                                                                   NSDictionary *responseHeaders = [[operation response] allHeaderFields];
+                                                                   completionBlock(responseHeaders, file, nil);
                                                                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 
                                                                    if ([self executeRequestWithId:requestId]) {
@@ -455,8 +462,8 @@ static void (^reachabilityChangeBlock)(int);
                                                                        if ([[{{classPrefix}}Configuration sharedConfig] debug]) {
                                                                            [self logResponse:nil forRequest:request error:augmentedError];
                                                                        }
-
-                                                                       completionBlock(nil, augmentedError);
+                                                                       NSDictionary *responseHeaders = [[operation response] allHeaderFields];
+                                                                       completionBlock(responseHeaders, nil, augmentedError);
                                                                    }
                                                                }];
 
@@ -477,7 +484,7 @@ static void (^reachabilityChangeBlock)(int);
                       requestContentType: (NSString*) requestContentType
                      responseContentType: (NSString*) responseContentType
                             responseType: (NSString *) responseType
-                         completionBlock: (void (^)(id, NSError *))completionBlock {
+                         completionBlock: (void (^)(NSDictionary *, id, NSError *))completionBlock {
     // setting request serializer
     if ([requestContentType isEqualToString:@"application/json"]) {
         self.requestSerializer = [{{classPrefix}}JSONRequestSerializer serializer];
@@ -585,13 +592,13 @@ static void (^reachabilityChangeBlock)(int);
 
     NSNumber* requestId = [{{classPrefix}}ApiClient queueRequest];
     if ([responseType isEqualToString:@"NSURL*"]) {
-        [self downloadOperationWithCompletionBlock:request requestId:requestId completionBlock:^(id data, NSError *error) {
-            completionBlock(data, error);
+        [self downloadOperationWithCompletionBlock:request requestId:requestId completionBlock:^(NSDictionary *responseHeaders, id data, NSError *error) {
+            completionBlock(responseHeaders, data, error);
         }];
     }
     else {
-        [self operationWithCompletionBlock:request requestId:requestId completionBlock:^(id data, NSError *error) {
-            completionBlock([self deserialize:data class:responseType], error);
+        [self operationWithCompletionBlock:request requestId:requestId completionBlock:^(NSDictionary *responseHeaders, id data, NSError *error) {
+            completionBlock(responseHeaders, [self deserialize:data class:responseType], error);
         }];
     }
     return requestId;

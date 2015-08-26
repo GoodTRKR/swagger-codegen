@@ -191,7 +191,7 @@ extern NSString *const {{classPrefix}}ResponseObjectErrorKey;
                       requestContentType:(NSString*) requestContentType
                      responseContentType:(NSString*) responseContentType
                             responseType:(NSString *) responseType
-                         completionBlock:(void (^)(id, NSError *))completionBlock;
+                         completionBlock:(void (^)(NSDictionary *, id, NSError *))completionBlock;
 
 /**
  * Sanitize object for request
