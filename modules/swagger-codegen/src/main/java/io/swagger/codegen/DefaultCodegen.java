@@ -14,6 +14,7 @@ import io.swagger.models.Swagger;
 import io.swagger.models.auth.ApiKeyAuthDefinition;
 import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.auth.In;
+import io.swagger.models.auth.OAuth2Definition;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.CookieParameter;
@@ -26,6 +27,7 @@ import io.swagger.models.parameters.SerializableParameter;
 import io.swagger.models.properties.AbstractNumericProperty;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
+import io.swagger.models.properties.ByteArrayProperty;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.DecimalProperty;
@@ -36,6 +38,7 @@ import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.PropertyBuilder;
+import io.swagger.models.properties.PropertyBuilder.PropertyId;
 import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
@@ -49,9 +52,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +65,7 @@ import java.util.regex.Pattern;
 
 
 public class DefaultCodegen {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCodegen.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(DefaultCodegen.class);
 
     protected String outputFolder = "";
     protected Set<String> defaultIncludes = new HashSet<String>();
@@ -76,6 +81,10 @@ public class DefaultCodegen {
     protected Map<String, Object> additionalProperties = new HashMap<String, Object>();
     protected List<SupportingFile> supportingFiles = new ArrayList<SupportingFile>();
     protected List<CliOption> cliOptions = new ArrayList<CliOption>();
+    protected boolean skipOverwrite;
+    protected boolean supportsInheritance = false;
+    protected Map<String, String> supportedLibraries = new LinkedHashMap<String, String>();
+    protected String library = null;
 
     public List<CliOption> cliOptions() {
         return cliOptions;
@@ -225,6 +234,11 @@ public class DefaultCodegen {
     }
 
     public String toOperationId(String operationId) {
+        // throw exception if method name is empty
+        if (StringUtils.isEmpty(operationId)) {
+            throw new RuntimeException("Empty method name (operationId) not allowed");
+        }
+
         return operationId;
     }
 
@@ -298,6 +312,8 @@ public class DefaultCodegen {
         typeMapping.put("double", "Double");
         typeMapping.put("object", "Object");
         typeMapping.put("integer", "Integer");
+        typeMapping.put("ByteArray", "byte[]");
+
 
         instantiationTypes = new HashMap<String, String>();
 
@@ -422,14 +438,6 @@ public class DefaultCodegen {
                 return dp.getDefault().toString();
             }
             return "null";
-        } else if (p instanceof MapProperty) {
-            MapProperty ap = (MapProperty) p;
-            String inner = getSwaggerType(ap.getAdditionalProperties());
-            return "new HashMap<String, " + inner + ">() ";
-        } else if (p instanceof ArrayProperty) {
-            ArrayProperty ap = (ArrayProperty) p;
-            String inner = getSwaggerType(ap.getItems());
-            return "new ArrayList<" + inner + ">() ";
         } else {
             return "null";
         }
@@ -442,6 +450,8 @@ public class DefaultCodegen {
         String datatype = null;
         if (p instanceof StringProperty) {
             datatype = "string";
+        } else if (p instanceof ByteArrayProperty) {
+            datatype = "ByteArray";
         } else if (p instanceof BooleanProperty) {
             datatype = "boolean";
         } else if (p instanceof DateProperty) {
@@ -506,6 +516,10 @@ public class DefaultCodegen {
     }
 
     public CodegenModel fromModel(String name, Model model) {
+        return fromModel(name, model, null);
+    }
+
+    public CodegenModel fromModel(String name, Model model, Map<String, Model> allDefinitions) {
         CodegenModel m = CodegenModelFactory.newInstance(CodegenModelType.MODEL);
         if (reservedWords.contains(name)) {
             m.name = escapeReservedWord(name);
@@ -520,17 +534,65 @@ public class DefaultCodegen {
         if (model instanceof ArrayModel) {
             ArrayModel am = (ArrayModel) model;
             ArrayProperty arrayProperty = new ArrayProperty(am.getItems());
+            m.hasEnums = false; // Otherwise there will be a NullPointerException in JavaClientCodegen.fromModel
             addParentContainer(m, name, arrayProperty);
         } else if (model instanceof RefModel) {
             // TODO
         } else if (model instanceof ComposedModel) {
             final ComposedModel composed = (ComposedModel) model;
+            Map<String, Property> properties = new HashMap<String, Property>();
+            List<String> required = new ArrayList<String>();
+            // parent model
             final RefModel parent = (RefModel) composed.getParent();
-            final String parentModel = toModelName(parent.getSimpleRef());
-            m.parent = parentModel;
-            addImport(m, parentModel);
-            final ModelImpl child = (ModelImpl) composed.getChild();
-            addVars(m, child.getProperties(), child.getRequired());
+            if (parent != null) {
+                final String parentRef = toModelName(parent.getSimpleRef());
+                m.parent = parentRef;
+                addImport(m, parentRef);
+                if (!supportsInheritance && allDefinitions != null) {
+                    final Model parentModel = allDefinitions.get(parentRef);
+                    if (parentModel instanceof ModelImpl) {
+                        final ModelImpl _parent = (ModelImpl) parentModel;
+                        if (_parent.getProperties() != null) {
+                            properties.putAll(_parent.getProperties());
+                        }
+                        if (_parent.getRequired() != null) {
+                            required.addAll(_parent.getRequired());
+                        }
+                    }
+                }
+            }
+            // interfaces (intermediate models)
+            if (allDefinitions != null) {
+                for (RefModel _interface : composed.getInterfaces()) {
+                    final String interfaceRef = toModelName(_interface.getSimpleRef());
+                    final Model interfaceModel = allDefinitions.get(interfaceRef);
+                    if (interfaceModel instanceof ModelImpl) {
+                        final ModelImpl _interfaceModel = (ModelImpl) interfaceModel;
+                        if (_interfaceModel.getProperties() != null) {
+                            properties.putAll(_interfaceModel.getProperties());
+                        }
+                        if (_interfaceModel.getRequired() != null) {
+                            required.addAll(_interfaceModel.getRequired());
+                        }
+                    }
+                }
+            }
+            // child model (properties owned by the model itself)
+            Model child = composed.getChild();
+            if (child != null && child instanceof RefModel && allDefinitions != null) {
+                final String childRef = ((RefModel) child).getSimpleRef();
+                child = allDefinitions.get(childRef);
+            }
+            if (child != null && child instanceof ModelImpl) {
+                final ModelImpl _child = (ModelImpl) child;
+                if (_child.getProperties() != null) {
+                    properties.putAll(_child.getProperties());
+                }
+                if (_child.getRequired() != null) {
+                    required.addAll(_child.getRequired());
+                }
+            }
+            addVars(m, properties, required);
         } else {
             ModelImpl impl = (ModelImpl) model;
             if (impl.getAdditionalProperties() != null) {
@@ -553,7 +615,7 @@ public class DefaultCodegen {
 
     public CodegenProperty fromProperty(String name, Property p) {
         if (p == null) {
-            LOGGER.error("unexpected missing property for name " + null);
+            LOGGER.error("unexpected missing property for name " + name);
             return null;
         }
         CodegenProperty property = CodegenModelFactory.newInstance(CodegenModelType.PROPERTY);
@@ -583,7 +645,9 @@ public class DefaultCodegen {
             if (np.getMaximum() != null) {
                 allowableValues.put("max", np.getMaximum());
             }
-            property.allowableValues = allowableValues;
+            if(allowableValues.size() > 0) {
+              property.allowableValues = allowableValues;
+            }
         }
 
         if (p instanceof StringProperty) {
@@ -614,22 +678,28 @@ public class DefaultCodegen {
 
         property.baseType = getSwaggerType(p);
 
-        if (p instanceof ArrayProperty) {
-            property.isContainer = true;
-            property.containerType = "array";
-            ArrayProperty ap = (ArrayProperty) p;
-            CodegenProperty cp = fromProperty("inner", ap.getItems());
-            if (cp == null) {
-                LOGGER.warn("skipping invalid property " + Json.pretty(p));
-            } else {
-                property.baseType = getSwaggerType(p);
-                if (!languageSpecificPrimitives.contains(cp.baseType)) {
-                    property.complexType = cp.baseType;
-                } else {
-                    property.isPrimitiveType = true;
-                }
-            }
-        } else if (p instanceof MapProperty) {
+	if (p instanceof ArrayProperty) {
+		property.isContainer = true;
+		property.containerType = "array";
+		ArrayProperty ap = (ArrayProperty) p;
+		CodegenProperty cp = fromProperty(property.name, ap.getItems());
+		if (cp == null) {
+			LOGGER.warn("skipping invalid property " + Json.pretty(p));
+		} else {
+			property.baseType = getSwaggerType(p);
+			if (!languageSpecificPrimitives.contains(cp.baseType)) {
+				property.complexType = cp.baseType;
+			} else {
+				property.isPrimitiveType = true;
+			}
+			property.items = cp;
+			if (property.items.isEnum) {
+				property.datatypeWithEnum = property.datatypeWithEnum.replace(property.items.baseType,
+						property.items.datatypeWithEnum);
+				property.defaultValue = property.defaultValue.replace(property.items.baseType, property.items.datatypeWithEnum);
+			}
+		}
+	} else if (p instanceof MapProperty) {
             property.isContainer = true;
             property.containerType = "map";
             MapProperty ap = (MapProperty) p;
@@ -850,6 +920,17 @@ public class DefaultCodegen {
         }
         op.bodyParam = bodyParam;
         op.httpMethod = httpMethod.toUpperCase();
+        // move "required" parameters in front of "optional" parameters
+        Collections.sort(allParams, new Comparator<CodegenParameter>() {
+            @Override
+            public int compare(CodegenParameter one, CodegenParameter another) {
+                boolean oneRequired = one.required == null ? false : one.required;
+                boolean anotherRequired = another.required == null ? false : another.required;
+                if (oneRequired == anotherRequired) return 0;
+                else if (oneRequired) return -1;
+                else return 1;
+            }
+        });
         op.allParams = addHasMore(allParams);
         op.bodyParams = addHasMore(bodyParams);
         op.pathParams = addHasMore(pathParams);
@@ -899,6 +980,7 @@ public class DefaultCodegen {
                 }
             }
             r.dataType = cm.datatype;
+            r.isBinary = cm.datatype.equals("byte[]");
             if (cm.isContainer != null) {
                 r.simpleType = false;
                 r.containerType = cm.containerType;
@@ -964,7 +1046,9 @@ public class DefaultCodegen {
                 p.baseType = pr.datatype;
                 imports.add(pr.baseType);
             } else {
-                property = PropertyBuilder.build(qp.getType(), qp.getFormat(), null);
+                Map<PropertyId, Object> args = new HashMap<PropertyId, Object>();
+                args.put(PropertyId.ENUM, qp.getEnum());
+                property = PropertyBuilder.build(qp.getType(), qp.getFormat(), args);
             }
             if (property == null) {
                 LOGGER.warn("warning!  Property type \"" + qp.getType() + "\" not found for parameter \"" + param.getName() + "\", using String");
@@ -972,8 +1056,11 @@ public class DefaultCodegen {
             }
             property.setRequired(param.getRequired());
             CodegenProperty model = fromProperty(qp.getName(), property);
-            p.collectionFormat = collectionFormat;
             p.dataType = model.datatype;
+            p.isEnum = model.isEnum;
+            p._enum = model._enum;
+            p.allowableValues = model.allowableValues;
+            p.collectionFormat = collectionFormat;
             p.paramName = toParamName(qp.getName());
 
             if (model.complexType != null) {
@@ -990,12 +1077,17 @@ public class DefaultCodegen {
                     p.dataType = getTypeDeclaration(cm.classname);
                     imports.add(p.dataType);
                 } else {
-                    // TODO: missing format, so this will not always work
-                    Property prop = PropertyBuilder.build(impl.getType(), null, null);
+                    Property prop = PropertyBuilder.build(impl.getType(), impl.getFormat(), null);
                     prop.setRequired(bp.getRequired());
                     CodegenProperty cp = fromProperty("property", prop);
                     if (cp != null) {
                         p.dataType = cp.datatype;
+                        if (p.dataType.equals("byte[]")) {
+                            p.isBinary = true;
+                        }
+                        else {
+                            p.isBinary = false;
+                        }
                     }
                 }
             } else if (model instanceof ArrayModel) {
@@ -1056,10 +1148,17 @@ public class DefaultCodegen {
                 sec.keyParamName = apiKeyDefinition.getName();
                 sec.isKeyInHeader = apiKeyDefinition.getIn() == In.HEADER;
                 sec.isKeyInQuery = !sec.isKeyInHeader;
+            } else if(schemeDefinition instanceof BasicAuthDefinition) {
+                sec.isKeyInHeader = sec.isKeyInQuery = sec.isApiKey = sec.isOAuth = false;
+                sec.isBasic = true;
             } else {
-                sec.isKeyInHeader = sec.isKeyInQuery = sec.isApiKey = false;
-                sec.isBasic = schemeDefinition instanceof BasicAuthDefinition;
-                sec.isOAuth = !sec.isBasic;
+            	final OAuth2Definition oauth2Definition = (OAuth2Definition) schemeDefinition;
+            	sec.isKeyInHeader = sec.isKeyInQuery = sec.isApiKey = sec.isBasic = false;
+                sec.isOAuth = true;
+                sec.flow = oauth2Definition.getFlow();
+                sec.authorizationUrl = oauth2Definition.getAuthorizationUrl();
+                sec.tokenUrl = oauth2Definition.getTokenUrl();
+                sec.scopes = oauth2Definition.getScopes().keySet();
             }
 
             sec.hasMore = it.hasNext();
@@ -1146,7 +1245,9 @@ public class DefaultCodegen {
         if (mappedType != null) {
             addImport(m, mappedType);
         }
-    }    /**
+    }
+
+    /**
      * Underscore the given word.
      *
      * @param word The word
@@ -1208,9 +1309,8 @@ public class DefaultCodegen {
         } else {
             m.emptyVars = true;
         }
-    }    public static String camelize(String word) {
-        return camelize(word, false);
     }
+
 
     /**
      * Remove characters not suitable for variable or method name from the input and camelize it
@@ -1231,7 +1331,13 @@ public class DefaultCodegen {
             name = name.substring(0, 1).toLowerCase() + name.substring(1);
         }
         return name;
-    }    public static String camelize(String word, boolean lowercaseFirstLetter) {
+    }
+
+    public static String camelize(String word) {
+        return camelize(word, false);
+    }
+
+    public static String camelize(String word, boolean lowercaseFirstLetter) {
         // Replace all slashes with dots (package separator)
         Pattern p = Pattern.compile("\\/(.?)");
         Matcher m = p.matcher(word);
@@ -1294,6 +1400,43 @@ public class DefaultCodegen {
     }
 
     public boolean shouldOverwrite(String filename) {
-        return true;
+        return !(skipOverwrite && new File(filename).exists());
+    }
+
+    public boolean isSkipOverwrite() {
+        return skipOverwrite;
+    }
+
+    public void setSkipOverwrite(boolean skipOverwrite) {
+        this.skipOverwrite = skipOverwrite;
+    }
+
+    /**
+     * All library templates supported.
+     * (key: library name, value: library description)
+     */
+    public Map<String, String> supportedLibraries() {
+        return supportedLibraries;
+    }
+
+    public void setLibrary(String library) {
+        if (library != null && !supportedLibraries.containsKey(library))
+            throw new RuntimeException("unknown library: " + library);
+        this.library = library;
+    }
+
+    /**
+     * Library template (sub-template).
+     */
+    public String getLibrary() {
+        return library;
+    }
+
+    protected CliOption buildLibraryCliOption(Map<String, String> supportedLibraries) {
+        StringBuilder sb = new StringBuilder("library template (sub-template) to use:");
+        for (String lib : supportedLibraries.keySet()) {
+            sb.append("\n").append(lib).append(" - ").append(supportedLibraries.get(lib));
+        }
+        return new CliOption("library", sb.toString());
     }
 }
