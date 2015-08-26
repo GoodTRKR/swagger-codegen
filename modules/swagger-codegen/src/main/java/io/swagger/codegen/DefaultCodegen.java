@@ -27,6 +27,7 @@ import io.swagger.models.parameters.SerializableParameter;
 import io.swagger.models.properties.AbstractNumericProperty;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
+import io.swagger.models.properties.ByteArrayProperty;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.DecimalProperty;
@@ -55,6 +56,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +83,8 @@ public class DefaultCodegen {
     protected List<CliOption> cliOptions = new ArrayList<CliOption>();
     protected boolean skipOverwrite;
     protected boolean supportsInheritance = false;
+    protected Map<String, String> supportedLibraries = new LinkedHashMap<String, String>();
+    protected String library = null;
 
     public List<CliOption> cliOptions() {
         return cliOptions;
@@ -308,6 +312,8 @@ public class DefaultCodegen {
         typeMapping.put("double", "Double");
         typeMapping.put("object", "Object");
         typeMapping.put("integer", "Integer");
+        typeMapping.put("ByteArray", "byte[]");
+
 
         instantiationTypes = new HashMap<String, String>();
 
@@ -444,6 +450,8 @@ public class DefaultCodegen {
         String datatype = null;
         if (p instanceof StringProperty) {
             datatype = "string";
+        } else if (p instanceof ByteArrayProperty) {
+            datatype = "ByteArray";
         } else if (p instanceof BooleanProperty) {
             datatype = "boolean";
         } else if (p instanceof DateProperty) {
@@ -526,6 +534,7 @@ public class DefaultCodegen {
         if (model instanceof ArrayModel) {
             ArrayModel am = (ArrayModel) model;
             ArrayProperty arrayProperty = new ArrayProperty(am.getItems());
+            m.hasEnums = false; // Otherwise there will be a NullPointerException in JavaClientCodegen.fromModel
             addParentContainer(m, name, arrayProperty);
         } else if (model instanceof RefModel) {
             // TODO
@@ -669,22 +678,28 @@ public class DefaultCodegen {
 
         property.baseType = getSwaggerType(p);
 
-        if (p instanceof ArrayProperty) {
-            property.isContainer = true;
-            property.containerType = "array";
-            ArrayProperty ap = (ArrayProperty) p;
-            CodegenProperty cp = fromProperty("inner", ap.getItems());
-            if (cp == null) {
-                LOGGER.warn("skipping invalid property " + Json.pretty(p));
-            } else {
-                property.baseType = getSwaggerType(p);
-                if (!languageSpecificPrimitives.contains(cp.baseType)) {
-                    property.complexType = cp.baseType;
-                } else {
-                    property.isPrimitiveType = true;
-                }
-            }
-        } else if (p instanceof MapProperty) {
+	if (p instanceof ArrayProperty) {
+		property.isContainer = true;
+		property.containerType = "array";
+		ArrayProperty ap = (ArrayProperty) p;
+		CodegenProperty cp = fromProperty(property.name, ap.getItems());
+		if (cp == null) {
+			LOGGER.warn("skipping invalid property " + Json.pretty(p));
+		} else {
+			property.baseType = getSwaggerType(p);
+			if (!languageSpecificPrimitives.contains(cp.baseType)) {
+				property.complexType = cp.baseType;
+			} else {
+				property.isPrimitiveType = true;
+			}
+			property.items = cp;
+			if (property.items.isEnum) {
+				property.datatypeWithEnum = property.datatypeWithEnum.replace(property.items.baseType,
+						property.items.datatypeWithEnum);
+				property.defaultValue = property.defaultValue.replace(property.items.baseType, property.items.datatypeWithEnum);
+			}
+		}
+	} else if (p instanceof MapProperty) {
             property.isContainer = true;
             property.containerType = "map";
             MapProperty ap = (MapProperty) p;
@@ -965,6 +980,7 @@ public class DefaultCodegen {
                 }
             }
             r.dataType = cm.datatype;
+            r.isBinary = cm.datatype.equals("byte[]");
             if (cm.isContainer != null) {
                 r.simpleType = false;
                 r.containerType = cm.containerType;
@@ -1061,12 +1077,17 @@ public class DefaultCodegen {
                     p.dataType = getTypeDeclaration(cm.classname);
                     imports.add(p.dataType);
                 } else {
-                    // TODO: missing format, so this will not always work
-                    Property prop = PropertyBuilder.build(impl.getType(), null, null);
+                    Property prop = PropertyBuilder.build(impl.getType(), impl.getFormat(), null);
                     prop.setRequired(bp.getRequired());
                     CodegenProperty cp = fromProperty("property", prop);
                     if (cp != null) {
                         p.dataType = cp.datatype;
+                        if (p.dataType.equals("byte[]")) {
+                            p.isBinary = true;
+                        }
+                        else {
+                            p.isBinary = false;
+                        }
                     }
                 }
             } else if (model instanceof ArrayModel) {
@@ -1289,7 +1310,7 @@ public class DefaultCodegen {
             m.emptyVars = true;
         }
     }
-    
+
 
     /**
      * Remove characters not suitable for variable or method name from the input and camelize it
@@ -1310,7 +1331,7 @@ public class DefaultCodegen {
             name = name.substring(0, 1).toLowerCase() + name.substring(1);
         }
         return name;
-    }    
+    }
 
     public static String camelize(String word) {
         return camelize(word, false);
@@ -1388,5 +1409,34 @@ public class DefaultCodegen {
 
     public void setSkipOverwrite(boolean skipOverwrite) {
         this.skipOverwrite = skipOverwrite;
+    }
+
+    /**
+     * All library templates supported.
+     * (key: library name, value: library description)
+     */
+    public Map<String, String> supportedLibraries() {
+        return supportedLibraries;
+    }
+
+    public void setLibrary(String library) {
+        if (library != null && !supportedLibraries.containsKey(library))
+            throw new RuntimeException("unknown library: " + library);
+        this.library = library;
+    }
+
+    /**
+     * Library template (sub-template).
+     */
+    public String getLibrary() {
+        return library;
+    }
+
+    protected CliOption buildLibraryCliOption(Map<String, String> supportedLibraries) {
+        StringBuilder sb = new StringBuilder("library template (sub-template) to use:");
+        for (String lib : supportedLibraries.keySet()) {
+            sb.append("\n").append(lib).append(" - ").append(supportedLibraries.get(lib));
+        }
+        return new CliOption("library", sb.toString());
     }
 }

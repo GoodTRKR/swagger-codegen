@@ -1,8 +1,11 @@
 package io.swagger.codegen;
 
+import static org.apache.commons.lang3.StringUtils.capitalize;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
-
+import io.swagger.codegen.languages.CodeGenStatus;
 import io.swagger.models.ComposedModel;
 import io.swagger.models.Contact;
 import io.swagger.models.Info;
@@ -15,7 +18,6 @@ import io.swagger.models.auth.OAuth2Definition;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.util.Json;
-
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 
@@ -36,13 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 public class DefaultGenerator extends AbstractGenerator implements Generator {
     protected CodegenConfig config;
     protected ClientOptInput opts = null;
     protected Swagger swagger = null;
+
+    public CodeGenStatus status = CodeGenStatus.UNRUN;
 
     public Generator opts(ClientOptInput opts) {
         this.opts = opts;
@@ -145,7 +146,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                         if (!config.shouldOverwrite(filename)) {
                             continue;
                         }
-                        String template = readTemplate(config.templateDir() + File.separator + templateName);
+                        String templateFile = getFullTemplateFile(config, templateName);
+                        String template = readTemplate(templateFile);
                         Template tmpl = Mustache.compiler()
                                 .withLoader(new Mustache.TemplateLoader() {
                                     public Reader getTemplate(String name) {
@@ -197,7 +199,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                         continue;
                     }
 
-                    String template = readTemplate(config.templateDir() + File.separator + templateName);
+                    String templateFile = getFullTemplateFile(config, templateName);
+                    String template = readTemplate(templateFile);
                     Template tmpl = Mustache.compiler()
                             .withLoader(new Mustache.TemplateLoader() {
                                 public Reader getTemplate(String name) {
@@ -268,8 +271,10 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                     continue;
                 }
 
-                if (support.templateFile.endsWith("mustache")) {
-                    String template = readTemplate(config.templateDir() + File.separator + support.templateFile);
+                String templateFile = getFullTemplateFile(config, support.templateFile);
+
+                if (templateFile.endsWith("mustache")) {
+                    String template = readTemplate(templateFile);
                     Template tmpl = Mustache.compiler()
                             .withLoader(new Mustache.TemplateLoader() {
                                 public Reader getTemplate(String name) {
@@ -285,12 +290,12 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                     InputStream in = null;
 
                     try {
-                        in = new FileInputStream(config.templateDir() + File.separator + support.templateFile);
+                        in = new FileInputStream(templateFile);
                     } catch (Exception e) {
                         // continue
                     }
                     if (in == null) {
-                        in = this.getClass().getClassLoader().getResourceAsStream(getCPResourcePath(config.templateDir() + File.separator + support.templateFile));
+                        in = this.getClass().getClassLoader().getResourceAsStream(getCPResourcePath(templateFile));
                     }
                     File outputFile = new File(outputFilename);
                     OutputStream out = new FileOutputStream(outputFile, false);
@@ -299,7 +304,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                         IOUtils.copy(in, out);
                     } else {
                         if (in == null) {
-                            System.out.println("can't open " + config.templateDir() + File.separator + support.templateFile + " for input");
+                            System.out.println("can't open " + templateFile + " for input");
                         }
                         if (out == null) {
                             System.out.println("can't open " + outputFile + " for output");
@@ -311,8 +316,10 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
             }
 
             config.processSwagger(swagger);
+
+            status = CodeGenStatus.SUCCESSFUL;
         } catch (Exception e) {
-            e.printStackTrace();
+            status = CodeGenStatus.FAILED;
         }
         return files;
     }
