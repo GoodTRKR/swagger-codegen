@@ -150,7 +150,7 @@ static {{classname}}* singletonAPI = nil;
     {{#notFile}}
     if ({{paramName}}) {
         if ([{{paramName}} isKindOfClass:[NSNumber class]]){
-            formParams[@"{{baseName}}"] = [{{paramName}} stringValue];
+            formParams[@"{{baseName}}"] = [((NSNumber *){{paramName}}) stringValue];
         }else{
             formParams[@"{{baseName}}"] = {{paramName}};
         }
