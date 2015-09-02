@@ -1,4 +1,17 @@
 #import "{{classPrefix}}Object.h"
 
 @implementation {{classPrefix}}Object
+
+-(BOOL)isEqual:(id)object
+{
+    if (![object isMemberOfClass:[self class]]){
+        return NO;
+    }
+    if ([object respondsToSelector:@selector(toDictionary)]) {
+        return [[self toDictionary] isEqualToDictionary:[object toDictionary]];
+    }else{   
+        return [super isEqual:object];
+    }       
+}
+
 @end
