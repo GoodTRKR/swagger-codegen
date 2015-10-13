@@ -20,7 +20,7 @@ static {{classname}}* singletonAPI = nil;
     if (self) {
         {{classPrefix}}Configuration *config = [{{classPrefix}}Configuration sharedConfig];
         if (config.apiClient == nil) {
-            config.apiClient = [[{{classPrefix}}ApiClient alloc] init];
+            config.apiClient = [[{{classPrefix}}ApiClient alloc] initWithBaseURL:[NSURL URLWithString:config.host]];
         }
         self.apiClient = config.apiClient;
         self.defaultHeaders = [NSMutableDictionary dictionary];

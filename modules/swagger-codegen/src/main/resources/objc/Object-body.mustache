@@ -1,4 +1,14 @@
 #import "{{classPrefix}}Object.h"
 
 @implementation {{classPrefix}}Object
+
+-(BOOL)isEqual:(id)object
+{
+    if (![object isMemberOfClass:[self class]]) {
+        return NO;
+    }
+        
+    return [[self toDictionary] isEqualToDictionary:[({{classPrefix}}Object *)object toDictionary]];
+}
+
 @end
