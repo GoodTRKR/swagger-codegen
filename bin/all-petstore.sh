@@ -26,15 +26,14 @@ cd $APP_DIR
 ./bin/java-petstore.sh
 ./bin/java-petstore-jersey2.sh
 ./bin/java-petstore-okhttp-gson.sh
+./bin/java-petstore-retrofit.sh
 ./bin/jaxrs-petstore-server.sh
 ./bin/nodejs-petstore-server.sh
 ./bin/objc-petstore.sh
 ./bin/perl-petstore.sh
 ./bin/php-petstore.sh
 ./bin/python-petstore.sh
-./bin/python3-petstore.sh
 ./bin/qt5-petstore.sh
-./bin/retrofit-petstore.sh
 ./bin/ruby-petstore.sh
 ./bin/scala-async-petstore.sh
 ./bin/scala-petstore.sh

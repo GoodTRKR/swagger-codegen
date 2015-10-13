@@ -9,21 +9,30 @@ using {{packageName}}.Client;
 namespace {{packageName}}.Api
 {
     {{#operations}}
+    /// <summary>
+    /// Represents a collection of functions to interact with the API endpoints
+    /// </summary>
     public interface I{{classname}}
     {
         {{#operation}}
         /// <summary>
-        /// {{summary}} {{notes}}
+        /// {{summary}}
         /// </summary>
+        /// <remarks>
+        /// {{notes}}
+        /// </remarks>
         {{#allParams}}/// <param name="{{paramName}}">{{description}}</param>
-        {{/allParams}}/// <returns>{{#returnType}}{{{returnType}}}{{/returnType}}</returns>
+        {{/allParams}}/// <returns>{{#returnType}}{{^returnContainer}}{{{returnType}}}{{/returnContainer}}{{/returnType}}</returns>
         {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{nickname}} ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
   
         /// <summary>
-        /// {{summary}} {{notes}}
+        /// {{summary}}
         /// </summary>
+        /// <remarks>
+        /// {{notes}}
+        /// </remarks>
         {{#allParams}}/// <param name="{{paramName}}">{{description}}</param>
-        {{/allParams}}/// <returns>{{#returnType}}{{{returnType}}}{{/returnType}}</returns>
+        {{/allParams}}/// <returns>{{#returnType}}{{^returnContainer}}{{{returnType}}}{{/returnContainer}}{{/returnType}}</returns>
         {{#returnType}}System.Threading.Tasks.Task<{{{returnType}}}>{{/returnType}}{{^returnType}}System.Threading.Tasks.Task{{/returnType}} {{nickname}}Async ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
         {{/operation}}
     }
@@ -77,7 +86,7 @@ namespace {{packageName}}.Api
         /// <summary>
         /// Gets or sets the API client.
         /// </summary>
-        /// <value>An instance of the ApiClient</param>
+        /// <value>An instance of the ApiClient</value>
         public ApiClient ApiClient {get; set;}
     
         {{#operation}}
@@ -85,7 +94,7 @@ namespace {{packageName}}.Api
         /// {{summary}} {{notes}}
         /// </summary>
         {{#allParams}}/// <param name="{{paramName}}">{{description}}</param> 
-        {{/allParams}}/// <returns>{{#returnType}}{{{returnType}}}{{/returnType}}</returns>            
+        {{/allParams}}/// <returns>{{#returnType}}{{^returnContainer}}{{{returnType}}}{{/returnContainer}}{{/returnType}}</returns>            
         public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{nickname}} ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}})
         {
             {{#allParams}}{{#required}}
@@ -102,6 +111,16 @@ namespace {{packageName}}.Api
             var fileParams = new Dictionary<String, FileParameter>();
             String postBody = null;
 
+            // to determine the Accept header
+            String[] http_header_accepts = new String[] {
+                {{#produces}}"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}}
+            };
+            String http_header_accept = ApiClient.SelectHeaderAccept(http_header_accepts);
+            if (http_header_accept != null)
+                headerParams.Add("Accept", ApiClient.SelectHeaderAccept(http_header_accepts));
+
+            // set "format" to json by default
+            // e.g. /pet/{petId}.{format} becomes /pet/{petId}.json
             pathParams.Add("format", "json");
             {{#pathParams}}if ({{paramName}} != null) pathParams.Add("{{baseName}}", ApiClient.ParameterToString({{paramName}})); // path parameter
             {{/pathParams}}
@@ -132,7 +151,7 @@ namespace {{packageName}}.Api
         /// {{summary}} {{notes}}
         /// </summary>
         {{#allParams}}/// <param name="{{paramName}}">{{description}}</param>
-        {{/allParams}}/// <returns>{{#returnType}}{{{returnType}}}{{/returnType}}</returns>
+        {{/allParams}}/// <returns>{{#returnType}}{{^returnContainer}}{{{returnType}}}{{/returnContainer}}{{/returnType}}</returns>
         {{#returnType}}public async System.Threading.Tasks.Task<{{{returnType}}}>{{/returnType}}{{^returnType}}public async System.Threading.Tasks.Task{{/returnType}} {{nickname}}Async ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}})
         {
             {{#allParams}}{{#required}}// verify the required parameter '{{paramName}}' is set
@@ -147,7 +166,17 @@ namespace {{packageName}}.Api
             var formParams = new Dictionary<String, String>();
             var fileParams = new Dictionary<String, FileParameter>();
             String postBody = null;
-    
+
+            // to determine the Accept header
+            String[] http_header_accepts = new String[] {
+                {{#produces}}"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}}
+            };
+            String http_header_accept = ApiClient.SelectHeaderAccept(http_header_accepts);
+            if (http_header_accept != null)
+                headerParams.Add("Accept", ApiClient.SelectHeaderAccept(http_header_accepts));
+
+            // set "format" to json by default
+            // e.g. /pet/{petId}.{format} becomes /pet/{petId}.json
             pathParams.Add("format", "json");
             {{#pathParams}}if ({{paramName}} != null) pathParams.Add("{{baseName}}", ApiClient.ParameterToString({{paramName}})); // path parameter
             {{/pathParams}}

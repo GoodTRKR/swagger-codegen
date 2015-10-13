@@ -103,6 +103,10 @@ public class DefaultCodegen {
         if (additionalProperties.containsKey(CodegenConstants.API_PACKAGE)) {
             this.setApiPackage((String) additionalProperties.get(CodegenConstants.API_PACKAGE));
         }
+
+        if (additionalProperties.containsKey(CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG)) {
+            this.setSortParamsByRequiredFlag(Boolean.valueOf((String)additionalProperties.get(CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG).toString()));
+        }
     }
 
     // override with any special post-processing
@@ -227,6 +231,10 @@ public class DefaultCodegen {
         this.apiPackage = apiPackage;
     }
 
+    public void setSortParamsByRequiredFlag(Boolean sortParamsByRequiredFlag) {
+        this.sortParamsByRequiredFlag = sortParamsByRequiredFlag;
+    }
+
     public String toApiFilename(String name) {
         return toApiName(name);
     }
@@ -344,6 +352,7 @@ public class DefaultCodegen {
 
         cliOptions.add(new CliOption(CodegenConstants.MODEL_PACKAGE, CodegenConstants.MODEL_PACKAGE_DESC));
         cliOptions.add(new CliOption(CodegenConstants.API_PACKAGE, CodegenConstants.API_PACKAGE_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG, CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG_DESC));
     }
 
 
@@ -483,10 +492,16 @@ public class DefaultCodegen {
         } else if (p instanceof DecimalProperty) {
             datatype = "number";
         } else if (p instanceof RefProperty) {
-            RefProperty r = (RefProperty) p;
-            datatype = r.get$ref();
-            if (datatype.indexOf("#/definitions/") == 0) {
-                datatype = datatype.substring("#/definitions/".length());
+            try {
+                RefProperty r = (RefProperty) p;
+                datatype = r.get$ref();
+                if (datatype.indexOf("#/definitions/") == 0) {
+                    datatype = datatype.substring("#/definitions/".length());
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Error obtaining the datatype from RefProperty:" + p + ". Datatype default to Object");
+                datatype = "Object";
+                e.printStackTrace();
             }
         } else {
             if (p != null) {
@@ -575,7 +590,7 @@ public class DefaultCodegen {
                 }
             }
             // interfaces (intermediate models)
-            if (allDefinitions != null) {
+            if (allDefinitions != null && composed.getInterfaces() != null) {
                 for (RefModel _interface : composed.getInterfaces()) {
                     final String interfaceRef = toModelName(_interface.getSimpleRef());
                     final Model interfaceModel = allDefinitions.get(interfaceRef);
@@ -642,6 +657,7 @@ public class DefaultCodegen {
         property.example = p.getExample();
         property.defaultValue = toDefaultValue(p);
         property.jsonSchema = Json.pretty(p);
+        property.isReadOnly = p.getReadOnly();
 
         String type = getSwaggerType(p);
         if (p instanceof AbstractNumericProperty) {
@@ -805,7 +821,8 @@ public class DefaultCodegen {
           			if (property.items.isEnum) {
           				  property.datatypeWithEnum = property.datatypeWithEnum.replace(property.items.baseType,
           						property.items.datatypeWithEnum);
-          				  property.defaultValue = property.defaultValue.replace(property.items.baseType, property.items.datatypeWithEnum);
+                            if(property.defaultValue != null)
+          				        property.defaultValue = property.defaultValue.replace(property.items.baseType, property.items.datatypeWithEnum);
           			}
         		}
       	} else if (p instanceof MapProperty) {
@@ -1033,8 +1050,8 @@ public class DefaultCodegen {
         }
         op.bodyParam = bodyParam;
         op.httpMethod = httpMethod.toUpperCase();
-        // move "required" parameters in front of "optional" parameters
 
+        // move "required" parameters in front of "optional" parameters
         if(sortParamsByRequiredFlag) {
           Collections.sort(allParams, new Comparator<CodegenParameter>() {
               @Override
@@ -1289,7 +1306,9 @@ public class DefaultCodegen {
                 sec.flow = oauth2Definition.getFlow();
                 sec.authorizationUrl = oauth2Definition.getAuthorizationUrl();
                 sec.tokenUrl = oauth2Definition.getTokenUrl();
-                sec.scopes = oauth2Definition.getScopes().keySet();
+                if (oauth2Definition.getScopes() != null) {
+                    sec.scopes = oauth2Definition.getScopes().keySet();
+                }
             }
 
             sec.hasMore = it.hasNext();
@@ -1439,6 +1458,8 @@ public class DefaultCodegen {
             }
         } else {
             m.emptyVars = true;
+            m.hasVars = false;
+            m.hasEnums = false;
         }
     }
 

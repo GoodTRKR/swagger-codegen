@@ -25,6 +25,7 @@ from .rest import ApiException
 
 import os
 import re
+import sys
 import urllib
 import json
 import mimetypes
@@ -125,7 +126,7 @@ class ApiClient(object):
                             for k, v in iteritems(query_params)}
 
         # post parameters
-        if post_params:
+        if post_params or files:
             post_params = self.prepare_post_parameters(post_params, files)
             post_params = self.sanitize_for_serialization(post_params)
 
@@ -187,9 +188,12 @@ class ApiClient(object):
         :param obj: The data to serialize.
         :return: The serialized form of data.
         """
+        types = (str, int, float, bool, tuple)
+        if sys.version_info < (3,0):
+            types = types + (unicode,)
         if isinstance(obj, type(None)):
             return None
-        elif isinstance(obj, (str, int, float, bool, tuple)):
+        elif isinstance(obj, types):
             return obj
         elif isinstance(obj, list):
             return [self.sanitize_for_serialization(sub_obj)

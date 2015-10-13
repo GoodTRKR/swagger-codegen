@@ -60,22 +60,47 @@ static void (^reachabilityChangeBlock)(int);
 
 #pragma mark - Log Methods
 
-- (void)logResponse:(AFHTTPRequestOperation *)operation
-         forRequest:(NSURLRequest *)request
-              error:(NSError*)error {
++ (void)debugLog:(NSString *)method
+         message:(NSString *)format, ... {
     SWGConfiguration *config = [SWGConfiguration sharedConfig];
+    if (!config.debug) {
+        return;
+    }
 
-    NSString *message = [NSString stringWithFormat:@"\n[DEBUG] Request body \n~BEGIN~\n %@\n~END~\n"\
-                         "[DEBUG] HTTP Response body \n~BEGIN~\n %@\n~END~\n",
-                        [[NSString alloc] initWithData:request.HTTPBody encoding:NSUTF8StringEncoding],
-                        operation.responseString];
+    NSMutableString *message = [NSMutableString stringWithCapacity:1];
 
+    if (method) {
+        [message appendString:[NSString stringWithFormat:@"%@: ", method]];
+    }
+
+    va_list args;
+    va_start(args, format);
+
+    [message appendString:[[NSString alloc] initWithFormat:format arguments:args]];
+
+    // If set logging file handler, log into file,
+    // otherwise log into console.
     if (config.loggingFileHanlder) {
         [config.loggingFileHanlder seekToEndOfFile];
         [config.loggingFileHanlder writeData:[message dataUsingEncoding:NSUTF8StringEncoding]];
     }
+    else {
+        NSLog(@"%@", message);
+    }
 
-    NSLog(@"%@", message);
+    va_end(args);
+}
+
+- (void)logResponse:(AFHTTPRequestOperation *)operation
+         forRequest:(NSURLRequest *)request
+              error:(NSError*)error {
+
+    NSString *message = [NSString stringWithFormat:@"\n[DEBUG] HTTP request body \n~BEGIN~\n %@\n~END~\n"\
+                         "[DEBUG] HTTP response body \n~BEGIN~\n %@\n~END~\n",
+                        [[NSString alloc] initWithData:request.HTTPBody encoding:NSUTF8StringEncoding],
+                        operation.responseString];
+
+    SWGDebugLog(message);
 }
 
 #pragma mark - Cache Methods
@@ -169,16 +194,14 @@ static void (^reachabilityChangeBlock)(int);
 +(NSNumber*) nextRequestId {
     @synchronized(self) {
         long nextId = ++requestId;
-        if([[SWGConfiguration sharedConfig] debug])
-            NSLog(@"got id %ld", nextId);
+        SWGDebugLog(@"got id %ld", nextId);
         return [NSNumber numberWithLong:nextId];
     }
 }
 
 +(NSNumber*) queueRequest {
     NSNumber* requestId = [SWGApiClient nextRequestId];
-    if([[SWGConfiguration sharedConfig] debug])
-        NSLog(@"added %@ to request queue", requestId);
+    SWGDebugLog(@"added %@ to request queue", requestId);
     [queuedRequests addObject:requestId];
     return requestId;
 }
@@ -198,8 +221,7 @@ static void (^reachabilityChangeBlock)(int);
     }];
 
     if(matchingItems.count == 1) {
-        if([[SWGConfiguration sharedConfig] debug])
-            NSLog(@"removing request id %@", requestId);
+        SWGDebugLog(@"removed request id %@", requestId);
         [queuedRequests removeObject:requestId];
         return YES;
     }
@@ -223,26 +245,22 @@ static void (^reachabilityChangeBlock)(int);
         reachabilityStatus = status;
         switch (status) {
             case AFNetworkReachabilityStatusUnknown:
-                if([[SWGConfiguration sharedConfig] debug])
-                    NSLog(@"reachability changed to AFNetworkReachabilityStatusUnknown");
+                SWGDebugLog(@"reachability changed to AFNetworkReachabilityStatusUnknown");
                 [SWGApiClient setOfflineState:true];
                 break;
 
             case AFNetworkReachabilityStatusNotReachable:
-                if([[SWGConfiguration sharedConfig] debug])
-                    NSLog(@"reachability changed to AFNetworkReachabilityStatusNotReachable");
+                SWGDebugLog(@"reachability changed to AFNetworkReachabilityStatusNotReachable");
                 [SWGApiClient setOfflineState:true];
                 break;
 
             case AFNetworkReachabilityStatusReachableViaWWAN:
-                if([[SWGConfiguration sharedConfig] debug])
-                    NSLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWWAN");
+                SWGDebugLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWWAN");
                 [SWGApiClient setOfflineState:false];
                 break;
 
             case AFNetworkReachabilityStatusReachableViaWiFi:
-                if([[SWGConfiguration sharedConfig] debug])
-                    NSLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWiFi");
+                SWGDebugLog(@"reachability changed to AFNetworkReachabilityStatusReachableViaWiFi");
                 [SWGApiClient setOfflineState:false];
                 break;
             default:
@@ -390,9 +408,7 @@ static void (^reachabilityChangeBlock)(int);
     AFHTTPRequestOperation *op = [self HTTPRequestOperationWithRequest:request
                                                                success:^(AFHTTPRequestOperation *operation, id response) {
                                                                    if([self executeRequestWithId:requestId]) {
-                                                                       if([[SWGConfiguration sharedConfig] debug]) {
-                                                                           [self logResponse:operation forRequest:request error:nil];
-                                                                       }
+                                                                       [self logResponse:operation forRequest:request error:nil];
                                                                        NSDictionary *responseHeaders = [[operation response] allHeaderFields];
                                                                        self.HTTPResponseHeaders = responseHeaders;
                                                                        completionBlock(response, nil);
@@ -405,9 +421,7 @@ static void (^reachabilityChangeBlock)(int);
                                                                            userInfo[SWGResponseObjectErrorKey] = operation.responseObject;
                                                                        }
                                                                        NSError *augmentedError = [error initWithDomain:error.domain code:error.code userInfo:userInfo];
-
-                                                                       if([[SWGConfiguration sharedConfig] debug])
-                                                                           [self logResponse:nil forRequest:request error:augmentedError];
+                                                                        [self logResponse:nil forRequest:request error:augmentedError];
 
                                                                        NSDictionary *responseHeaders = [[operation response] allHeaderFields];
                                                                        self.HTTPResponseHeaders = responseHeaders;
@@ -467,9 +481,9 @@ static void (^reachabilityChangeBlock)(int);
 
                                                                        NSError *augmentedError = [error initWithDomain:error.domain code:error.code userInfo:userInfo];
 
-                                                                       if ([[SWGConfiguration sharedConfig] debug]) {
-                                                                           [self logResponse:nil forRequest:request error:augmentedError];
-                                                                       }
+
+                                                                        [self logResponse:nil forRequest:request error:augmentedError];
+
                                                                        NSDictionary *responseHeaders = [[operation response] allHeaderFields];
                                                                        self.HTTPResponseHeaders = responseHeaders;
                                                                        completionBlock(nil, augmentedError);
@@ -546,7 +560,8 @@ static void (^reachabilityChangeBlock)(int);
                                                               parameters:nil
                                                constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
                                                    [formParams enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-                                                       NSData *data = [obj dataUsingEncoding:NSUTF8StringEncoding];
+                                                       NSString *objString = [self parameterToString:obj];
+                                                       NSData *data = [objString dataUsingEncoding:NSUTF8StringEncoding];
                                                        [formData appendPartWithFormData:data name:key];
                                                    }];
                                                    [files enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
@@ -576,15 +591,15 @@ static void (^reachabilityChangeBlock)(int);
         hasHeaderParams = true;
     }
     if(offlineState) {
-        NSLog(@"%@ cache forced", resourcePath);
+        SWGDebugLog(@"%@ cache forced", resourcePath);
         [request setCachePolicy:NSURLRequestReturnCacheDataDontLoad];
     }
     else if(!hasHeaderParams && [method isEqualToString:@"GET"] && cacheEnabled) {
-        NSLog(@"%@ cache enabled", resourcePath);
+        SWGDebugLog(@"%@ cache enabled", resourcePath);
         [request setCachePolicy:NSURLRequestUseProtocolCachePolicy];
     }
     else {
-        NSLog(@"%@ cache disabled", resourcePath);
+        SWGDebugLog(@"%@ cache disabled", resourcePath);
         [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
     }
 
@@ -761,6 +776,32 @@ static void (^reachabilityChangeBlock)(int);
     }
 
     return securityPolicy;
+}
+
+- (NSString *) parameterToString:(id)param {
+    if ([param isKindOfClass:[NSString class]]) {
+        return param;
+    }
+    else if ([param isKindOfClass:[NSNumber class]]) {
+        return [param stringValue];
+    }
+    else if ([param isKindOfClass:[NSDate class]]) {
+        return [param ISO8601String];
+    }
+    else if ([param isKindOfClass:[NSArray class]]) {
+        NSMutableArray *mutableParam;
+        [param enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            [mutableParam addObject:[self parameterToString:obj]];
+        }];
+        return [mutableParam componentsJoinedByString:@","];
+    }
+    else {
+        NSException *e = [NSException
+                          exceptionWithName:@"InvalidObjectArgumentException"
+                          reason:[NSString stringWithFormat:@"*** The argument object: %@ is invalid", param]
+                          userInfo:nil];
+        @throw e;
+    }
 }
 
 @end

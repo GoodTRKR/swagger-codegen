@@ -39,7 +39,7 @@ import io.swagger.client.auth.HttpBasicAuth;
 import io.swagger.client.auth.ApiKeyAuth;
 import io.swagger.client.auth.OAuth;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-09-11T11:35:58.351+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-10-01T23:05:28.119+08:00")
 public class ApiClient {
   private Map<String, Client> hostMap = new HashMap<String, Client>();
   private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
@@ -211,7 +211,7 @@ public class ApiClient {
   /**
    * Set the date format used to parse/format date parameters.
    */
-  public ApiClient getDateFormat(DateFormat dateFormat) {
+  public ApiClient setDateFormat(DateFormat dateFormat) {
     this.dateFormat = dateFormat;
     return this;
   }
@@ -384,8 +384,15 @@ public class ApiClient {
 
     if (contentType.startsWith("application/json")) {
       return json.deserialize(body, returnType);
+    } else if (returnType.getType().equals(String.class)) {
+      // Expecting string, return the raw response body.
+      return (T) body;
     } else {
-      throw new ApiException(500, "can not deserialize Content-Type: " + contentType);
+      throw new ApiException(
+        500,
+        "Content type \"" + contentType + "\" is not supported for type: "
+          + returnType.getType()
+      );
     }
   }
 
