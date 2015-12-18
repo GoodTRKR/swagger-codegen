@@ -331,11 +331,11 @@ static SWGUserApi* singletonAPI = nil;
     
 
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
-    if(username != nil) {
+    if (username != nil) {
         
         queryParams[@"username"] = username;
     }
-    if(password != nil) {
+    if (password != nil) {
         
         queryParams[@"password"] = password;
     }
@@ -470,7 +470,7 @@ static SWGUserApi* singletonAPI = nil;
 ///
 /// Get user by user name
 /// 
-///  @param username The name that needs to be fetched. Use user1 for testing. 
+///  @param username The name that needs to be fetched. Use user1 for testing.
 ///
 ///  @returns SWGUser*
 ///

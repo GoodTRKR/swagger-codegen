@@ -7,7 +7,8 @@ import java.util.List;
 
 public class CodegenParameter {
     public Boolean isFormParam, isQueryParam, isPathParam, isHeaderParam,
-            isCookieParam, isBodyParam, isFile, notFile, hasMore, isContainer, secondaryParam, isBinary;
+            isCookieParam, isBodyParam, isFile, notFile, hasMore, isContainer, 
+            secondaryParam, isBinary, isCollectionFormatMulti;
     public String baseName, paramName, dataType, collectionFormat, description, baseType, defaultValue;
     public String jsonSchema;
     public boolean isEnum;
@@ -22,6 +23,51 @@ public class CodegenParameter {
      */
     public Boolean required;
 
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor17.
+	 */
+    public Number maximum;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor17
+	 */
+    public Boolean exclusiveMaximum;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor21
+	 */
+    public Number minimum;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor21
+	 */
+    public Boolean exclusiveMinimum;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor26
+	 */
+    public Integer maxLength;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor29
+	 */
+    public Integer minLength;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor33
+	 */
+    public String pattern;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor42
+	 */
+    public Integer maxItems;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor45
+	 */
+    public Integer minItems;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor49
+	 */
+    public Boolean uniqueItems;
+	/**
+	 * See http://json-schema.org/latest/json-schema-validation.html#anchor14
+	 */
+    public Number multipleOf;
+    
     public CodegenParameter copy() {
         CodegenParameter output = new CodegenParameter();
         output.isFile = this.isFile;
@@ -33,6 +79,7 @@ public class CodegenParameter {
         output.paramName = this.paramName;
         output.dataType = this.dataType;
         output.collectionFormat = this.collectionFormat;
+        output.isCollectionFormatMulti = this.isCollectionFormatMulti;
         output.description = this.description;
         output.baseType = this.baseType;
         output.isFormParam = this.isFormParam;
@@ -42,6 +89,17 @@ public class CodegenParameter {
         output.isCookieParam = this.isCookieParam;
         output.isBodyParam = this.isBodyParam;
         output.required = this.required;
+        output.maximum = this.maximum;
+        output.exclusiveMaximum = this.exclusiveMaximum;
+        output.minimum = this.minimum;
+        output.exclusiveMinimum = this.exclusiveMinimum;
+        output.maxLength = this.maxLength;
+        output.minLength = this.minLength;
+        output.pattern = this.pattern;
+        output.maxItems = this.maxItems;
+        output.minItems = this.minItems;
+        output.uniqueItems = this.uniqueItems;
+        output.multipleOf = this.multipleOf;
         output.jsonSchema = this.jsonSchema;
         output.defaultValue = this.defaultValue;
         output.isEnum = this.isEnum;
@@ -56,3 +114,4 @@ public class CodegenParameter {
         return output;
     }
 }
+

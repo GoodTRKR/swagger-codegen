@@ -20,7 +20,7 @@ class AlamofireRequestBuilder<T>: RequestBuilder<T> {
         super.init(method: method, URLString: URLString, parameters: parameters, isBody: isBody)
     }
 
-    override func execute(completion: (response: Response<T>?, erorr: NSError?) -> Void) {
+    override func execute(completion: (response: Response<T>?, error: ErrorType?) -> Void) {
         let managerId = NSUUID().UUIDString
         // Create a new manager for each request to customize its request header
         let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
@@ -29,45 +29,76 @@ class AlamofireRequestBuilder<T>: RequestBuilder<T> {
         managerStore[managerId] = manager
 
         let encoding = isBody ? Alamofire.ParameterEncoding.JSON : Alamofire.ParameterEncoding.URL
-        let request = manager.request(Alamofire.Method(rawValue: method)!, URLString, parameters: parameters, encoding: encoding)
+        let xMethod = Alamofire.Method(rawValue: method)
+        let fileKeys = parameters == nil ? [] : parameters!.filter { $1.isKindOfClass(NSURL) }
+                                                           .map { $0.0 }
+
+        if fileKeys.count > 0 {
+            manager.upload(
+                xMethod!, URLString, headers: nil,
+                multipartFormData: { mpForm in
+                    for (k, v) in self.parameters! {
+                        switch v {
+                        case let fileURL as NSURL:
+                            mpForm.appendBodyPart(fileURL: fileURL, name: k)
+                            break
+                        case let string as NSString:
+                            mpForm.appendBodyPart(data: string.dataUsingEncoding(NSUTF8StringEncoding)!, name: k)
+                            break
+                        case let number as NSNumber:
+                            mpForm.appendBodyPart(data: number.stringValue.dataUsingEncoding(NSUTF8StringEncoding)!, name: k)
+                            break
+                        default:
+                            fatalError("Unprocessable value \(v) with key \(k)")
+                            break
+                        }
+                    }
+                },
+                encodingMemoryThreshold: Manager.MultipartFormDataEncodingMemoryThreshold,
+                encodingCompletion: { encodingResult in
+                    switch encodingResult {
+                    case .Success(let upload, _, _):
+                        self.processRequest(upload, managerId, completion)
+                    case .Failure(let encodingError):
+                        completion(response: nil, error: encodingError)
+                    }
+                }
+            )
+        } else {
+            processRequest(manager.request(xMethod!, URLString, parameters: parameters, encoding: encoding), managerId, completion)
+        }
+
+    }
+
+    private func processRequest(request: Request, _ managerId: String, _ completion: (response: Response<T>?, error: ErrorType?) -> Void) {
         if let credential = self.credential {
             request.authenticate(usingCredential: credential)
         }
 
-        request.responseJSON(options: .AllowFragments) { (req, res, json, error) in
+        request.responseJSON(options: .AllowFragments) { response in
             managerStore.removeValueForKey(managerId)
 
-            if let error = error {
-                completion(response: nil, erorr: error)
-                return
-            }
-            if res!.statusCode >= 400 {
-                //TODO: Add error entity
-                let userInfo: [NSObject : AnyObject] = (json != nil) ? ["data": json!] : [:]
-                let error = NSError(domain: res!.URL!.URLString, code: res!.statusCode, userInfo: userInfo)
-                completion(response: nil, erorr: error)
+            if response.result.isFailure {
+                completion(response: nil, error: response.result.error)
                 return
             }
 
             if () is T {
-                let response = Response(response: res!, body: () as! T)
-                completion(response: response, erorr: nil)
+                completion(response: Response(response: response.response!, body: () as! T), error: nil)
                 return
             }
-            if let json: AnyObject = json {
+            if let json: AnyObject = response.result.value {
                 let body = Decoders.decode(clazz: T.self, source: json)
-                let response = Response(response: res!, body: body)
-                completion(response: response, erorr: nil)
+                completion(response: Response(response: response.response!, body: body), error: nil)
                 return
             } else if "" is T {
                 // swagger-parser currently doesn't support void, which will be fixed in future swagger-parser release
                 // https://github.com/swagger-api/swagger-parser/pull/34
-                let response = Response(response: res!, body: "" as! T)
-                completion(response: response, erorr: nil)
+                completion(response: Response(response: response.response!, body: "" as! T), error: nil)
                 return
             }
-            
-            completion(response: nil, erorr: NSError(domain: "localhost", code: 500, userInfo: ["reason": "unreacheable code"]))
+
+            completion(response: nil, error: NSError(domain: "localhost", code: 500, userInfo: ["reason": "unreacheable code"]))
         }
     }
 
@@ -79,4 +110,3 @@ class AlamofireRequestBuilder<T>: RequestBuilder<T> {
         return httpHeaders
     }
 }
-

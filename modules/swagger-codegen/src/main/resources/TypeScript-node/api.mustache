@@ -27,7 +27,7 @@ export class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{
 }
 
 {{#hasEnums}}
-export module {{classname}} {
+export namespace {{classname}} {
 {{#vars}}
 {{#isEnum}}
     export enum {{datatypeWithEnum}} { {{#allowableValues}}{{#values}}
@@ -73,8 +73,10 @@ class ApiKeyAuth implements Authentication {
 }
 
 class OAuth implements Authentication {
+    public accessToken: string;
+
     applyToRequest(requestOptions: request.Options): void {
-        // TODO: support oauth
+        requestOptions.headers["Authorization"] = "Bearer " + this.accessToken;
     }
 }
 
@@ -95,7 +97,11 @@ class VoidAuth implements Authentication {
 */
 {{/description}}
 export class {{classname}} {
-    private basePath = '{{basePath}}';
+    protected basePath = '{{basePath}}';
+    protected defaultHeaders : any = {};
+
+
+
     public authentications = {
         'default': <Authentication>new VoidAuth(),
 {{#authMethods}}
@@ -111,13 +117,13 @@ export class {{classname}} {
 {{/authMethods}}
     }
 
-    constructor(url: string, basePath?: string);
+    constructor(basePath?: string);
 {{#authMethods}}
 {{#isBasic}}
-    constructor(url: string, username: string, password: string, basePath?: string);
+    constructor(username: string, password: string, basePath?: string);
 {{/isBasic}}
 {{/authMethods}}
-    constructor(private url: string, basePathOrUsername: string, password?: string, basePath?: string) {
+    constructor(basePathOrUsername: string, password?: string, basePath?: string) {
         if (password) {
 {{#authMethods}}
 {{#isBasic}}
@@ -152,20 +158,32 @@ export class {{classname}} {
     }
 {{/isApiKey}}
 {{#isOAuth}}
+
+    set accessToken(token: string) {
+        this.authentications.{{name}}.accessToken = token;
+    }
 {{/isOAuth}}
 {{/authMethods}}
+    private extendObj<T1,T2>(objA: T1, objB: T2) {
+        for(let key in objB){
+            if(objB.hasOwnProperty(key)){
+                objA[key] = objB[key];
+            }
+        }
+        return <T1&T2>objA;
+    }
 {{#operation}}
-
-    public {{nickname}} ({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) : Promise<{ response: http.ClientResponse; {{#returnType}}body: {{{returnType}}}; {{/returnType}} }> {
-        var path = this.url + this.basePath + '{{path}}';
-
-{{#pathParams}}
-        path = path.replace('{' + '{{baseName}}' + '}', String({{paramName}}));
-
-{{/pathParams}}
-        var queryParameters: any = {};
-        var headerParams: any = {};
-        var formParams: any = {};
+    /**
+     * {{summary}}
+     * {{notes}}
+     {{#allParams}}* @param {{paramName}} {{description}}
+     {{/allParams}}*/
+    public {{nickname}} ({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) : Promise<{ response: http.ClientResponse; {{#returnType}}body: {{{returnType}}}; {{/returnType}}{{^returnType}}body?: any; {{/returnType}} }> {
+        const path = this.basePath + '{{path}}'{{#pathParams}}
+            .replace('{' + '{{baseName}}' + '}', String({{paramName}})){{/pathParams}};
+        let queryParameters: any = {};
+        let headerParams: any = this.extendObj({}, this.defaultHeaders);
+        let formParams: any = {};
 
 {{#allParams}}{{#required}}
         // verify required parameter '{{paramName}}' is set
@@ -183,7 +201,7 @@ export class {{classname}} {
         headerParams['{{baseName}}'] = {{paramName}};
 
 {{/headerParams}}
-        var useFormData = false;
+        let useFormData = false;
 
 {{#formParams}}
         if ({{paramName}} !== undefined) {
@@ -194,9 +212,9 @@ export class {{classname}} {
 {{/isFile}}
 
 {{/formParams}}
-        var deferred = promise.defer<{ response: http.ClientResponse; {{#returnType}}body: {{{returnType}}}; {{/returnType}} }>();
+        let deferred = promise.defer<{ response: http.ClientResponse; {{#returnType}}body: {{{returnType}}}; {{/returnType}}{{^returnType}}body?: any; {{/returnType}} }>();
 
-        var requestOptions: request.Options = {
+        let requestOptions: request.Options = {
             method: '{{httpMethod}}',
             qs: queryParameters,
             headers: headerParams,

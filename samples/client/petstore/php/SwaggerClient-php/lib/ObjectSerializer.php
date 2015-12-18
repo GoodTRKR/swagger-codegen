@@ -56,14 +56,14 @@ class ObjectSerializer
     {
         if (is_scalar($data) || null === $data) {
             $sanitized = $data;
-        } else if ($data instanceof \DateTime) {
+        } elseif ($data instanceof \DateTime) {
             $sanitized = $data->format(\DateTime::ISO8601);
-        } else if (is_array($data)) {
+        } elseif (is_array($data)) {
             foreach ($data as $property => $value) {
                 $data[$property] = $this->sanitizeForSerialization($value);
             }
             $sanitized = $data;
-        } else if (is_object($data)) {
+        } elseif (is_object($data)) {
             $values = array();
             foreach (array_keys($data::$swaggerTypes) as $property) {
                 $getter = $data::$getters[$property];
@@ -193,12 +193,12 @@ class ObjectSerializer
             $deserialized = $values;
         } elseif ($class === '\DateTime') {
             $deserialized = new \DateTime($data);
-        } elseif (in_array($class, array('void', 'bool', 'string', 'double', 'byte', 'mixed', 'integer', 'float', 'int', 'DateTime', 'number', 'boolean', 'object'))) {
+        } elseif (in_array($class, array('integer', 'int', 'void', 'number', 'object', 'double', 'float', 'byte', 'DateTime', 'string', 'mixed', 'boolean', 'bool'))) {
             settype($data, $class);
             $deserialized = $data;
         } elseif ($class === '\SplFileObject') {
             // determine file name
-            if (preg_match('/Content-Disposition: inline; filename=[\'"]?([^\'"\s]+)[\'"]?$/i', $httpHeader, $match)) {
+            if (array_key_exists('Content-Disposition', $httpHeaders) && preg_match('/inline; filename=[\'"]?([^\'"\s]+)[\'"]?$/i', $httpHeader['Content-Disposition'], $match)) {
                 $filename = Configuration::getDefaultConfiguration()->getTempFolderPath().$match[1];
             } else {
                 $filename = tempnam(Configuration::getDefaultConfiguration()->getTempFolderPath(), '');

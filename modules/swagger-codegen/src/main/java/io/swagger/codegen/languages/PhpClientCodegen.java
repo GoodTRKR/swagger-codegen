@@ -6,19 +6,27 @@ import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
 import io.swagger.codegen.SupportingFile;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
+import io.swagger.models.properties.*;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
+    static Logger LOGGER = LoggerFactory.getLogger(PhpClientCodegen.class);
+
+    public static final String VARIABLE_NAMING_CONVENTION = "variableNamingConvention";
+    public static final String PACKAGE_PATH = "packagePath";
+    public static final String SRC_BASE_PATH = "srcBasePath";
+    public static final String COMPOSER_VENDOR_NAME = "composerVendorName";
+    public static final String COMPOSER_PROJECT_NAME = "composerProjectName";
     protected String invokerPackage = "Swagger\\Client";
     protected String composerVendorName = "swagger";
     protected String composerProjectName = "swagger-client";
@@ -33,7 +41,7 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         outputFolder = "generated-code" + File.separator + "php";
         modelTemplateFiles.put("model.mustache", ".php");
         apiTemplateFiles.put("api.mustache", ".php");
-        templateDir = "php";
+        embeddedTemplateDir = templateDir = "php";
         apiPackage = invokerPackage + "\\Api";
         modelPackage = invokerPackage + "\\Model";
 
@@ -86,12 +94,15 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         typeMapping.put("object", "object");
         typeMapping.put("DateTime", "\\DateTime");
 
-        cliOptions.add(new CliOption("variableNamingConvention", "naming convention of variable name, e.g. camelCase. Default: snake_case"));
+        cliOptions.add(new CliOption(CodegenConstants.MODEL_PACKAGE, CodegenConstants.MODEL_PACKAGE_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.API_PACKAGE, CodegenConstants.API_PACKAGE_DESC));
+        cliOptions.add(new CliOption(VARIABLE_NAMING_CONVENTION, "naming convention of variable name, e.g. camelCase.")
+                .defaultValue("snake_case"));
         cliOptions.add(new CliOption(CodegenConstants.INVOKER_PACKAGE, "The main namespace to use for all classes. e.g. Yay\\Pets"));
-        cliOptions.add(new CliOption("packagePath", "The main package name for classes. e.g. GeneratedPetstore"));
-        cliOptions.add(new CliOption("srcBasePath", "The directory under packagePath to serve as source root."));
-        cliOptions.add(new CliOption("composerVendorName", "The vendor name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. yaypets"));
-        cliOptions.add(new CliOption("composerProjectName", "The project name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. petstore-client"));
+        cliOptions.add(new CliOption(PACKAGE_PATH, "The main package name for classes. e.g. GeneratedPetstore"));
+        cliOptions.add(new CliOption(SRC_BASE_PATH, "The directory under packagePath to serve as source root."));
+        cliOptions.add(new CliOption(COMPOSER_VENDOR_NAME, "The vendor name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. yaypets"));
+        cliOptions.add(new CliOption(COMPOSER_PROJECT_NAME, "The project name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. petstore-client"));
         cliOptions.add(new CliOption(CodegenConstants.ARTIFACT_VERSION, "The version to use in the composer package version field. e.g. 1.2.3"));
     }
 
@@ -121,7 +132,7 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
 
         return (getPackagePath() + File.separatorChar + basePath
                     // Replace period, backslash, forward slash with file separator in package name
-                    + packageName.replaceAll("[\\.\\\\/]", File.separator)
+                    + packageName.replaceAll("[\\.\\\\/]", Matcher.quoteReplacement(File.separator))
                     // Trim prefix file separators from package path
                     .replaceAll(regFirstPathSeparator, ""))
                     // Trim trailing file separators from the overall path
@@ -144,16 +155,16 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
     public void processOpts() {
         super.processOpts();
 
-        if (additionalProperties.containsKey("packagePath")) {
-            this.setPackagePath((String) additionalProperties.get("packagePath"));
+        if (additionalProperties.containsKey(PACKAGE_PATH)) {
+            this.setPackagePath((String) additionalProperties.get(PACKAGE_PATH));
         } else {
-            additionalProperties.put("packagePath", packagePath);
+            additionalProperties.put(PACKAGE_PATH, packagePath);
         }
 
-        if (additionalProperties.containsKey("srcBasePath")) {
-            this.setSrcBasePath((String) additionalProperties.get("srcBasePath"));
+        if (additionalProperties.containsKey(SRC_BASE_PATH)) {
+            this.setSrcBasePath((String) additionalProperties.get(SRC_BASE_PATH));
         } else {
-            additionalProperties.put("srcBasePath", srcBasePath);
+            additionalProperties.put(SRC_BASE_PATH, srcBasePath);
         }
         
         if (additionalProperties.containsKey(CodegenConstants.INVOKER_PACKAGE)) {
@@ -162,34 +173,34 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
             additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
         }
         
-        if (additionalProperties.containsKey(CodegenConstants.MODEL_PACKAGE)) {
-            this.setModelPackage((String) additionalProperties.get(CodegenConstants.MODEL_PACKAGE));
-        } else {
+        if (!additionalProperties.containsKey(CodegenConstants.MODEL_PACKAGE)) {
             additionalProperties.put(CodegenConstants.MODEL_PACKAGE, modelPackage);
         }
 
-        if (additionalProperties.containsKey(CodegenConstants.API_PACKAGE)) {
-            this.setApiPackage((String) additionalProperties.get(CodegenConstants.API_PACKAGE));
-        } else {
+        if (!additionalProperties.containsKey(CodegenConstants.API_PACKAGE)) {
             additionalProperties.put(CodegenConstants.API_PACKAGE, apiPackage);
         }
                 
-        if (additionalProperties.containsKey("composerProjectName")) {
-            this.setComposerProjectName((String) additionalProperties.get("composerProjectName"));
+        if (additionalProperties.containsKey(COMPOSER_PROJECT_NAME)) {
+            this.setComposerProjectName((String) additionalProperties.get(COMPOSER_PROJECT_NAME));
         } else {
-            additionalProperties.put("composerProjectName", composerProjectName);
+            additionalProperties.put(COMPOSER_PROJECT_NAME, composerProjectName);
         }
         
-        if (additionalProperties.containsKey("composerVendorName")) {
-            this.setComposerVendorName((String) additionalProperties.get("composerVendorName"));
+        if (additionalProperties.containsKey(COMPOSER_VENDOR_NAME)) {
+            this.setComposerVendorName((String) additionalProperties.get(COMPOSER_VENDOR_NAME));
         } else {
-            additionalProperties.put("composerVendorName", composerVendorName);
+            additionalProperties.put(COMPOSER_VENDOR_NAME, composerVendorName);
         }
         
         if (additionalProperties.containsKey(CodegenConstants.ARTIFACT_VERSION)) {
             this.setArtifactVersion((String) additionalProperties.get(CodegenConstants.ARTIFACT_VERSION));
         } else {
             additionalProperties.put(CodegenConstants.ARTIFACT_VERSION, artifactVersion);
+        }
+
+        if (additionalProperties.containsKey(VARIABLE_NAMING_CONVENTION)) {
+            this.setParameterNamingConvention((String) additionalProperties.get(VARIABLE_NAMING_CONVENTION));
         }
         
         additionalProperties.put("escapedInvokerPackage", invokerPackage.replace("\\", "\\\\"));
@@ -209,11 +220,11 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     @Override
     public String apiFileFolder() {
-        return (outputFolder + "/" + toPackagePath(apiPackage(), srcBasePath));
+        return (outputFolder + "/" + toPackagePath(apiPackage, srcBasePath));
     }
 
     public String modelFileFolder() {
-        return (outputFolder + "/" + toPackagePath(modelPackage(), srcBasePath));
+        return (outputFolder + "/" + toPackagePath(modelPackage, srcBasePath));
     }
 
     @Override
@@ -262,10 +273,6 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         return toModelName(type);
     }
 
-    public String toDefaultValue(Property p) {
-        return "null";
-    }
-
     public void setInvokerPackage(String invokerPackage) {
         this.invokerPackage = invokerPackage;
     }
@@ -286,7 +293,7 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         this.variableNamingConvention = variableNamingConvention;
     }
 
-    private void setComposerVendorName(String composerVendorName) {
+    public void setComposerVendorName(String composerVendorName) {
         this.composerVendorName = composerVendorName;
     }
     
@@ -296,10 +303,6 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
 
     @Override
     public String toVarName(String name) {
-        if (additionalProperties.containsKey("variableNamingConvention")) {
-            this.setParameterNamingConvention((String) additionalProperties.get("variableNamingConvention"));
-        }
-
         // sanitize name
         name = sanitizeName(name);
 
@@ -333,6 +336,9 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         // Note: backslash ("\\") is allowed for e.g. "\\DateTime"
         name = name.replaceAll("[^\\w\\\\]+", "_");
 
+        // remove dollar sign
+        name = name.replaceAll("$", "");
+
         // model name cannot use reserved keyword
         if (reservedWords.contains(name)) {
             escapeReservedWord(name); // e.g. return => _return
@@ -362,6 +368,53 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         }
 
         return camelize(sanitizeName(operationId), true);
+    }
+
+    /**
+     * Return the default value of the property
+     *
+     * @param p Swagger property object
+     * @return string presentation of the default value of the property
+     */
+    @Override
+    public String toDefaultValue(Property p) {
+        if (p instanceof StringProperty) {
+            StringProperty dp = (StringProperty) p;
+            if (dp.getDefault() != null) {
+                return "'" + dp.getDefault().toString() + "'";
+            }
+        } else if (p instanceof BooleanProperty) {
+            BooleanProperty dp = (BooleanProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof DateProperty) {
+            // TODO
+        } else if (p instanceof DateTimeProperty) {
+            // TODO
+        } else if (p instanceof DoubleProperty) {
+            DoubleProperty dp = (DoubleProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof FloatProperty) {
+            FloatProperty dp = (FloatProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof IntegerProperty) {
+            IntegerProperty dp = (IntegerProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof LongProperty) {
+            LongProperty dp = (LongProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        }
+
+        return null;
     }
 
 }

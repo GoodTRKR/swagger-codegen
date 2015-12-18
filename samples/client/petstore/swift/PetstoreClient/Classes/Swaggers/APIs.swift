@@ -6,19 +6,20 @@
 
 import Foundation
 
-class OneteamAPI {
-    static let basePath = "http://ec2-52-68-31-200.ap-northeast-1.compute.amazonaws.com/"
-    static var credential: NSURLCredential?
+public class PetstoreClientAPI {
+    public static var basePath = "http://petstore.swagger.io/v2"
+    public static var credential: NSURLCredential?
+    public static var customHeaders: [String:String] = [:]  
     static var requestBuilderFactory: RequestBuilderFactory = AlamofireRequestBuilderFactory()
 }
 
-class APIBase {
+public class APIBase {
     func toParameters(encodable: JSONEncodable?) -> [String: AnyObject]? {
         let encoded: AnyObject? = encodable?.encodeToJSON()
 
         if encoded! is [AnyObject] {
             var dictionary = [String:AnyObject]()
-            for (index, item) in enumerate(encoded as! [AnyObject]) {
+            for (index, item) in (encoded as! [AnyObject]).enumerate() {
                 dictionary["\(index)"] = item
             }
             return dictionary
@@ -28,7 +29,7 @@ class APIBase {
     }
 }
 
-class RequestBuilder<T> {
+public class RequestBuilder<T> {
     var credential: NSURLCredential?
     var headers: [String:String] = [:]
     let parameters: [String:AnyObject]?
@@ -36,24 +37,32 @@ class RequestBuilder<T> {
     let method: String
     let URLString: String
     
-    required init(method: String, URLString: String, parameters: [String:AnyObject]?, isBody: Bool) {
+    required public init(method: String, URLString: String, parameters: [String:AnyObject]?, isBody: Bool) {
         self.method = method
         self.URLString = URLString
         self.parameters = parameters
         self.isBody = isBody
+        
+        addHeaders(PetstoreClientAPI.customHeaders)
     }
     
-    func execute(completion: (response: Response<T>?, erorr: NSError?) -> Void) { }
+    public func addHeaders(aHeaders:[String:String]) {
+        for (header, value) in aHeaders {
+            headers[header] = value
+        }
+    }
+    
+    public func execute(completion: (response: Response<T>?, error: ErrorType?) -> Void) { }
 
-    func addHeader(#name: String, value: String) -> Self {
+    public func addHeader(name name: String, value: String) -> Self {
         if !value.isEmpty {
             headers[name] = value
         }
         return self
     }
     
-    func addCredential() -> Self {
-        self.credential = OneteamAPI.credential
+    public func addCredential() -> Self {
+        self.credential = PetstoreClientAPI.credential
         return self
     }
 }

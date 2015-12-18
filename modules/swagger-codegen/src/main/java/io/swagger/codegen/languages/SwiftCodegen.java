@@ -1,9 +1,11 @@
 package io.swagger.codegen.languages;
 
 import com.google.common.base.Predicate;
+
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import io.swagger.codegen.*;
+import io.swagger.models.Swagger;
 import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.parameters.HeaderParameter;
@@ -13,6 +15,7 @@ import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -21,13 +24,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
-  private static final Pattern PATH_PARAM_PATTERN = Pattern.compile("\\{[a-zA-Z_]+\\}");
+  public static final String PROJECT_NAME = "projectName";
+  public static final String RESPONSE_AS = "responseAs";
+  public static final String UNWRAP_REQUIRED = "unwrapRequired";
+  public static final String POD_SOURCE = "podSource";
+  public static final String POD_AUTHORS = "podAuthors";
+  public static final String POD_SOCIAL_MEDIA_URL = "podSocialMediaURL";
+  public static final String POD_DOCSET_URL = "podDocsetURL";
+  public static final String POD_LICENSE = "podLicense";
+  public static final String POD_HOMEPAGE = "podHomepage";
+  public static final String POD_SUMMARY = "podSummary";
+  public static final String POD_DESCRIPTION = "podDescription";
+  public static final String POD_SCREENSHOTS = "podScreenshots";
+  public static final String POD_DOCUMENTATION_URL = "podDocumentationURL";
   protected static final String LIBRARY_PROMISE_KIT = "PromiseKit";
   protected static final String[] RESPONSE_LIBRARIES = { LIBRARY_PROMISE_KIT };
   protected String projectName = "SwaggerClient";
   protected boolean unwrapRequired = false;
   protected String[] responseAs = new String[0];
   protected String sourceFolder = "Classes" + File.separator + "Swaggers";
+  private static final Pattern PATH_PARAM_PATTERN = Pattern.compile("\\{[a-zA-Z_]+\\}");
 
   public CodegenType getTag() {
     return CodegenType.CLIENT;
@@ -46,7 +62,7 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
     outputFolder = "generated-code" + File.separator + "swift";
     modelTemplateFiles.put("model.mustache", ".swift");
     apiTemplateFiles.put("api.mustache", ".swift");
-    templateDir = "swift";
+    embeddedTemplateDir = templateDir = "swift";
     apiPackage = File.separator + "APIs";
     modelPackage = File.separator + "Models";
 
@@ -104,22 +120,22 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
 
     importMapping = new HashMap<String, String>();
 
-    cliOptions.add(new CliOption("projectName", "Project name in Xcode"));
-    cliOptions.add(new CliOption("responseAs", "Optionally use libraries to manage response.  Currently " +
+    cliOptions.add(new CliOption(PROJECT_NAME, "Project name in Xcode"));
+    cliOptions.add(new CliOption(RESPONSE_AS, "Optionally use libraries to manage response.  Currently " +
             StringUtils.join(RESPONSE_LIBRARIES, ", ") + " are available."));
-    cliOptions.add(new CliOption("unwrapRequired", "Treat 'required' properties in response as non-optional " +
+    cliOptions.add(new CliOption(UNWRAP_REQUIRED, "Treat 'required' properties in response as non-optional " +
             "(which would crash the app if api returns null as opposed to required option specified in json schema"));
-    cliOptions.add(new CliOption("podSource", "Source information used for Podspec"));
-    cliOptions.add(new CliOption("podVersion", "Version used for Podspec"));
-    cliOptions.add(new CliOption("podAuthors", "Authors used for Podspec"));
-    cliOptions.add(new CliOption("podSocialMediaURL", "Social Media URL used for Podspec"));
-    cliOptions.add(new CliOption("podDocsetURL", "Docset URL used for Podspec"));
-    cliOptions.add(new CliOption("podLicense", "License used for Podspec"));
-    cliOptions.add(new CliOption("podHomepage", "Homepage used for Podspec"));
-    cliOptions.add(new CliOption("podSummary", "Summary used for Podspec"));
-    cliOptions.add(new CliOption("podDescription", "Description used for Podspec"));
-    cliOptions.add(new CliOption("podScreenshots", "Screenshots used for Podspec"));
-    cliOptions.add(new CliOption("podDocumentationURL", "Documentation URL used for Podspec"));
+    cliOptions.add(new CliOption(POD_SOURCE, "Source information used for Podspec"));
+    cliOptions.add(new CliOption(CodegenConstants.POD_VERSION, "Version used for Podspec"));
+    cliOptions.add(new CliOption(POD_AUTHORS, "Authors used for Podspec"));
+    cliOptions.add(new CliOption(POD_SOCIAL_MEDIA_URL, "Social Media URL used for Podspec"));
+    cliOptions.add(new CliOption(POD_DOCSET_URL, "Docset URL used for Podspec"));
+    cliOptions.add(new CliOption(POD_LICENSE, "License used for Podspec"));
+    cliOptions.add(new CliOption(POD_HOMEPAGE, "Homepage used for Podspec"));
+    cliOptions.add(new CliOption(POD_SUMMARY, "Summary used for Podspec"));
+    cliOptions.add(new CliOption(POD_DESCRIPTION, "Description used for Podspec"));
+    cliOptions.add(new CliOption(POD_SCREENSHOTS, "Screenshots used for Podspec"));
+    cliOptions.add(new CliOption(POD_DOCUMENTATION_URL, "Documentation URL used for Podspec"));
   }
 
   @Override
@@ -127,29 +143,29 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
     super.processOpts();
 
     // Setup project name
-    if (additionalProperties.containsKey("projectName")) {
-      projectName = (String) additionalProperties.get("projectName");
+    if (additionalProperties.containsKey(PROJECT_NAME)) {
+      setProjectName((String) additionalProperties.get(PROJECT_NAME));
     } else {
-      additionalProperties.put("projectName", projectName);
+      additionalProperties.put(PROJECT_NAME, projectName);
     }
     sourceFolder = projectName + File.separator + sourceFolder;
 
     // Setup unwrapRequired option, which makes all the properties with "required" non-optional
-    if (additionalProperties.containsKey("unwrapRequired")) {
-      unwrapRequired = Boolean.parseBoolean(String.valueOf(additionalProperties.get("unwrapRequired")));
+    if (additionalProperties.containsKey(UNWRAP_REQUIRED)) {
+      setUnwrapRequired(Boolean.parseBoolean(String.valueOf(additionalProperties.get(UNWRAP_REQUIRED))));
     }
-    additionalProperties.put("unwrapRequired", unwrapRequired);
+    additionalProperties.put(UNWRAP_REQUIRED, unwrapRequired);
 
     // Setup unwrapRequired option, which makes all the properties with "required" non-optional
-    if (additionalProperties.containsKey("responseAs")) {
-      Object responseAsObject = additionalProperties.get("responseAs");
+    if (additionalProperties.containsKey(RESPONSE_AS)) {
+      Object responseAsObject = additionalProperties.get(RESPONSE_AS);
       if (responseAsObject instanceof String) {
-        responseAs = ((String)responseAsObject).split(",");
+        setResponseAs(((String)responseAsObject).split(","));
       } else {
-        responseAs = (String[]) responseAsObject;
+        setResponseAs((String[]) responseAsObject);
       }
     }
-    additionalProperties.put("responseAs", responseAs);
+    additionalProperties.put(RESPONSE_AS, responseAs);
     if (ArrayUtils.contains(responseAs, LIBRARY_PROMISE_KIT)) {
       additionalProperties.put("usePromiseKit", true);
     }
@@ -234,7 +250,7 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
       List<String> values = (List<String>) codegenProperty.allowableValues.get("values");
       for (String value : values) {
         Map<String, String> map = new HashMap<String, String>();
-        map.put("enum", StringUtils.capitalize(value));
+        map.put("enum", toSwiftyEnumName(value));
         map.put("raw", value);
         swiftEnums.add(map);
       }
@@ -248,6 +264,16 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
     return codegenProperty;
   }
 
+    public String toSwiftyEnumName(String value) {
+        // Prevent from breaking properly cased identifier
+        if (value.matches("[A-Z][a-z0-9]+[a-zA-Z0-9]*")) {
+            return value;
+        }
+        char[] separators = {'-', '_', ' '};
+        return WordUtils.capitalizeFully(StringUtils.lowerCase(value), separators).replaceAll("[-_ ]", "");
+    }
+
+
   @Override
   public String toApiName(String name) {
     if(name.length() == 0)
@@ -256,7 +282,7 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
   }
 
   @Override
-  public CodegenOperation fromOperation(String path, String httpMethod, Operation operation, Map<String, Model> definitions) {
+  public CodegenOperation fromOperation(String path, String httpMethod, Operation operation, Map<String, Model> definitions, Swagger swagger) {
     path = normalizePath(path);
     List<Parameter> parameters = operation.getParameters();
     parameters = Lists.newArrayList(Iterators.filter(parameters.iterator(), new Predicate<Parameter>() {
@@ -266,7 +292,7 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
       }
     }));
     operation.setParameters(parameters);
-    return super.fromOperation(path, httpMethod, operation, definitions);
+    return super.fromOperation(path, httpMethod, operation, definitions, swagger);
   }
 
   private static String normalizePath(String path) {
@@ -294,5 +320,17 @@ public class SwiftCodegen extends DefaultCodegen implements CodegenConfig {
     builder.append(stringAfterMatch);
 
     return builder.toString();
+  }
+
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
+
+  public void setUnwrapRequired(boolean unwrapRequired) {
+    this.unwrapRequired = unwrapRequired;
+  }
+
+  public void setResponseAs(String[] responseAs) {
+    this.responseAs = responseAs;
   }
 }

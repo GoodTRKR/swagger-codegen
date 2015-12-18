@@ -14,7 +14,7 @@ public class CodegenTest {
 
     @Test(description = "read a file upload param from a 2.0 spec")
     public void fileUploadParamTest() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/petstore.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/petstore.json");
         final DefaultCodegen codegen = new DefaultCodegen();
         final String path = "/pet/{petId}/uploadImage";
         final Operation p = model.getPaths().get(path).getPost();
@@ -39,7 +39,7 @@ public class CodegenTest {
 
     @Test(description = "read formParam values from a 2.0 spec")
     public void formParamTest() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/petstore.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/petstore.json");
         final DefaultCodegen codegen = new DefaultCodegen();
         final String path = "/pet/{petId}";
         final Operation p = model.getPaths().get(path).getPost();
@@ -83,7 +83,7 @@ public class CodegenTest {
 
     @Test(description = "handle required parameters from a 2.0 spec as required when figuring out Swagger types")
     public void requiredParametersTest() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/requiredTest.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/requiredTest.json");
 
         final DefaultCodegen codegen = new DefaultCodegen() {
             public String getSwaggerType(Property p) {
@@ -106,7 +106,7 @@ public class CodegenTest {
 
     @Test(description = "select main response from a 2.0 spec using the lowest 2XX code")
     public void responseSelectionTest1() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/responseSelectionTest.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/responseSelectionTest.json");
         final DefaultCodegen codegen = new DefaultCodegen();
         final String path = "/tests/withTwoHundredAndDefault";
         final Operation p = model.getPaths().get(path).getGet();
@@ -117,7 +117,7 @@ public class CodegenTest {
 
     @Test(description = "select main response from a 2.0 spec using the default keyword when no 2XX code")
     public void responseSelectionTest2() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/responseSelectionTest.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/responseSelectionTest.json");
         final DefaultCodegen codegen = new DefaultCodegen();
         final String path = "/tests/withoutTwoHundredButDefault";
         final Operation p = model.getPaths().get(path).getGet();
@@ -128,7 +128,7 @@ public class CodegenTest {
 
     @Test(description = "return byte array when response format is byte")
     public void binaryDataTest() {
-        final Swagger model = new SwaggerParser().read("src/test/resources/2_0/binaryDataTest.json");
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/binaryDataTest.json");
         final DefaultCodegen codegen = new DefaultCodegen();
         final String path = "/tests/binaryResponse";
         final Operation p = model.getPaths().get(path).getPost();
@@ -138,5 +138,60 @@ public class CodegenTest {
         Assert.assertEquals(op.bodyParam.dataType, "byte[]");
         Assert.assertTrue(op.bodyParam.isBinary);
         Assert.assertTrue(op.responses.get(0).isBinary);
+    }
+    
+    @Test(description = "use operation consumes and produces")
+    public void localConsumesAndProducesTest() {
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/globalConsumesAndProduces.json");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        final String path = "/tests/localConsumesAndProduces";
+        final Operation p = model.getPaths().get(path).getGet();
+        CodegenOperation op = codegen.fromOperation(path, "get", p, model.getDefinitions(), model);
+        
+        Assert.assertTrue(op.hasConsumes);
+        Assert.assertEquals(op.consumes.size(), 1);
+        Assert.assertEquals(op.consumes.get(0).get("mediaType"), "application/json");
+        Assert.assertTrue(op.hasProduces);
+        Assert.assertEquals(op.produces.size(), 1);
+        Assert.assertEquals(op.produces.get(0).get("mediaType"), "application/json");
+    }
+    
+    @Test(description = "use spec consumes and produces")
+    public void globalConsumesAndProducesTest() {
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/globalConsumesAndProduces.json");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        final String path = "/tests/globalConsumesAndProduces";
+        final Operation p = model.getPaths().get(path).getGet();
+        CodegenOperation op = codegen.fromOperation(path, "get", p, model.getDefinitions(), model);
+        
+        Assert.assertTrue(op.hasConsumes);
+        Assert.assertEquals(op.consumes.size(), 1);
+        Assert.assertEquals(op.consumes.get(0).get("mediaType"), "application/global_consumes");
+        Assert.assertTrue(op.hasProduces);
+        Assert.assertEquals(op.produces.size(), 1);
+        Assert.assertEquals(op.produces.get(0).get("mediaType"), "application/global_produces");
+    }
+ 
+    @Test(description = "use operation consumes and produces (reset in operation with empty array)")
+    public void localResetConsumesAndProducesTest() {
+        final Swagger model = parseAndPrepareSwagger("src/test/resources/2_0/globalConsumesAndProduces.json");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        final String path = "/tests/localResetConsumesAndProduces";
+        final Operation p = model.getPaths().get(path).getGet();
+        CodegenOperation op = codegen.fromOperation(path, "get", p, model.getDefinitions(), model);
+        
+        Assert.assertNotNull(op);
+        Assert.assertFalse(op.hasConsumes);
+        Assert.assertNull(op.consumes);
+        Assert.assertFalse(op.hasProduces);
+        Assert.assertNull(op.produces);
+
+    }
+
+    private Swagger parseAndPrepareSwagger(String path) {
+        Swagger swagger = new SwaggerParser().read(path);
+        // resolve inline models
+        new InlineModelResolver().flatten(swagger);
+        return swagger;
     }
 }

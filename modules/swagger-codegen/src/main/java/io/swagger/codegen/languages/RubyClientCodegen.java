@@ -2,20 +2,23 @@ package io.swagger.codegen.languages;
 
 import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
 import io.swagger.codegen.SupportingFile;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
+import io.swagger.models.properties.*;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 
 public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
+    public static final String GEM_NAME = "gemName";
+    public static final String MODULE_NAME = "moduleName";
+    public static final String GEM_VERSION = "gemVersion";
     protected String gemName = null;
     protected String moduleName = null;
     protected String gemVersion = "1.0.0";
@@ -28,7 +31,7 @@ public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
         outputFolder = "generated-code" + File.separator + "ruby";
         modelTemplateFiles.put("model.mustache", ".rb");
         apiTemplateFiles.put("api.mustache", ".rb");
-        templateDir = "ruby";
+        embeddedTemplateDir = templateDir = "ruby";
 
         typeMapping.clear();
         languageSpecificPrimitives.clear();
@@ -67,21 +70,30 @@ public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
         typeMapping.put("file", "File");
 
         // remove modelPackage and apiPackage added by default
-        cliOptions.clear();
-        cliOptions.add(new CliOption("gemName", "gem name (convention: underscore_case), default: swagger_client"));
-        cliOptions.add(new CliOption("moduleName", "top module name (convention: CamelCase, usually corresponding to gem name), default: SwaggerClient"));
-        cliOptions.add(new CliOption("gemVersion", "gem version, default: 1.0.0"));
+        Iterator<CliOption> itr = cliOptions.iterator();
+        while (itr.hasNext()) {
+            CliOption opt = itr.next();
+            if (CodegenConstants.MODEL_PACKAGE.equals(opt.getOpt()) ||
+                    CodegenConstants.API_PACKAGE.equals(opt.getOpt())) {
+                itr.remove();
+            }
+        }
+        cliOptions.add(new CliOption(GEM_NAME, "gem name (convention: underscore_case).").
+                defaultValue("swagger_client"));
+        cliOptions.add(new CliOption(MODULE_NAME, "top module name (convention: CamelCase, usually corresponding" +
+                " to gem name).").defaultValue("SwaggerClient"));
+        cliOptions.add(new CliOption(GEM_VERSION, "gem version.").defaultValue("1.0.0"));
     }
 
     @Override
     public void processOpts() {
         super.processOpts();
 
-        if (additionalProperties.containsKey("gemName")) {
-            setGemName((String) additionalProperties.get("gemName"));
+        if (additionalProperties.containsKey(GEM_NAME)) {
+            setGemName((String) additionalProperties.get(GEM_NAME));
         }
-        if (additionalProperties.containsKey("moduleName")) {
-            setModuleName((String) additionalProperties.get("moduleName"));
+        if (additionalProperties.containsKey(MODULE_NAME)) {
+            setModuleName((String) additionalProperties.get(MODULE_NAME));
         }
 
         if (gemName == null && moduleName == null) {
@@ -93,14 +105,14 @@ public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
             setModuleName(generateModuleName(gemName));
         }
 
-        additionalProperties.put("gemName", gemName);
-        additionalProperties.put("moduleName", moduleName);
+        additionalProperties.put(GEM_NAME, gemName);
+        additionalProperties.put(MODULE_NAME, moduleName);
 
-        if (additionalProperties.containsKey("gemVersion")) {
-            setGemVersion((String) additionalProperties.get("gemVersion"));
+        if (additionalProperties.containsKey(GEM_VERSION)) {
+            setGemVersion((String) additionalProperties.get(GEM_VERSION));
         } else {
             // not set, pass the default value to template
-            additionalProperties.put("gemVersion", gemVersion);
+            additionalProperties.put(GEM_VERSION, gemVersion);
         }
 
         // use constant model/api package (folder path)
@@ -173,6 +185,43 @@ public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
     }
 
     @Override
+    public String toDefaultValue(Property p) {
+        if (p instanceof IntegerProperty) {
+            IntegerProperty dp = (IntegerProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof LongProperty) {
+            LongProperty dp = (LongProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof DoubleProperty) {
+            DoubleProperty dp = (DoubleProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof FloatProperty) {
+            FloatProperty dp = (FloatProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof BooleanProperty) {
+            BooleanProperty bp = (BooleanProperty) p;
+            if (bp.getDefault() != null) {
+                return bp.getDefault().toString();
+            }
+        } else if (p instanceof StringProperty) {
+            StringProperty sp = (StringProperty) p;
+            if (sp.getDefault() != null) {
+                return "\"" + escapeText(sp.getDefault()) + "\"";
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public String getSwaggerType(Property p) {
         String swaggerType = super.getSwaggerType(p);
         String type = null;
@@ -188,10 +237,6 @@ public class RubyClientCodegen extends DefaultCodegen implements CodegenConfig {
             return null;
         }
         return type;
-    }
-
-    public String toDefaultValue(Property p) {
-        return "null";
     }
 
     @Override

@@ -1,14 +1,7 @@
 require 'uri'
-require 'singleton'
 
 module Petstore
   class Configuration
-
-    include Singleton
-
-    # Default api client
-    attr_accessor :api_client
-
     # Defines url scheme
     attr_accessor :scheme
 
@@ -43,6 +36,9 @@ module Petstore
     #
     # @return [String]
     attr_accessor :password
+
+    # Defines the access token (Bearer) used with OAuth2.
+    attr_accessor :access_token
 
     # Set this to enable/disable debugging. When enabled (set to true), HTTP request/response
     # details will be logged with `logger.debug` (see the `logger` attribute).
@@ -91,17 +87,6 @@ module Petstore
 
     attr_accessor :force_ending_format
 
-    class << self
-      def method_missing(method_name, *args, &block)
-        config = Configuration.instance
-        if config.respond_to?(method_name)
-          config.send(method_name, *args, &block)
-        else
-          super
-        end
-      end
-    end
-
     def initialize
       @scheme = 'http'
       @host = 'petstore.swagger.io'
@@ -115,10 +100,17 @@ module Petstore
       @inject_format = false
       @force_ending_format = false
       @logger = defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
+
+      yield(self) if block_given?
     end
 
-    def api_client
-      @api_client ||= ApiClient.new
+    # The default Configuration object.
+    def self.default
+      @@default ||= Configuration.new
+    end
+
+    def configure
+      yield(self) if block_given?
     end
 
     def scheme=(scheme)
@@ -138,7 +130,7 @@ module Petstore
     end
 
     def base_url
-      url = "#{scheme}://#{[host, base_path].join('/').gsub(/\/+/, '/')}"
+      url = "#{scheme}://#{[host, base_path].join('/').gsub(/\/+/, '/')}".sub(/\/+\z/, '')
       URI.encode(url)
     end
 
@@ -160,6 +152,13 @@ module Petstore
     # Returns Auth Settings hash for api client.
     def auth_settings
       {
+        'petstore_auth' =>
+          {
+            type: 'oauth2',
+            in: 'header',
+            key: 'Authorization',
+            value: "Bearer #{access_token}"
+          },
         'api_key' =>
           {
             type: 'api_key',

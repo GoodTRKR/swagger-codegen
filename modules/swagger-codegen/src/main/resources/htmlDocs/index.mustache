@@ -87,17 +87,22 @@
     </div>  <!-- field-items -->
     {{/hasQueryParams}}
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
+    {{#hasFormParams}}
+    <h3 class="field-label">Form parameters</h3>
+    <div class="field-items">
+      {{#formParams}}{{>formParam}}{{/formParams}}
+    </div>  <!-- field-items -->
+    {{/hasFormParams}}
 
     {{#returnType}}
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#{{returnContainer}}">{{{returnType}}}</a></div>
+    <div class="return-type">
+      {{#hasReference}}{{^returnSimpleType}}{{returnContainer}}[{{/returnSimpleType}}<a href="#{{returnBaseType}}">{{returnBaseType}}</a>{{^returnSimpleType}}]{{/returnSimpleType}}{{/hasReference}}
+      {{^hasReference}}{{returnType}}{{/hasReference}}
+    </div>
     {{/returnType}}
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     {{#hasExamples}}
     {{#examples}}
@@ -154,6 +159,10 @@
     <h3 class="field-label"><a name="{{classname}}">{{classname}}</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       {{#vars}}<div class="param">{{name}} {{#isNotRequired}}(optional){{/isNotRequired}}</div><div class="param-desc"><span class="param-type">{{datatype}}</span> {{description}}</div>
+      {{#isEnum}}
+        <div class="param-enum-header">Enum:</div>
+        {{#_enum}}<div class="param-enum">{{this}}</div>{{/_enum}}
+      {{/isEnum}}
       {{/vars}}
     </div>  <!-- field-items -->
   </div>

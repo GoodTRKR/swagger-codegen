@@ -8,22 +8,24 @@
 import Foundation
 
 
-class Order: JSONEncodable {
+public class Order: JSONEncodable {
 
-    enum Status: String { 
+    public enum Status: String { 
         case Placed = "placed"
         case Approved = "approved"
         case Delivered = "delivered"
     }
     
-    var id: Int?
-    var petId: Int?
-    var quantity: Int?
-    var shipDate: NSDate?
+    public var id: Int?
+    public var petId: Int?
+    public var quantity: Int?
+    public var shipDate: NSDate?
     /** Order Status */
-    var status: Status?
-    var complete: Bool?
+    public var status: Status?
+    public var complete: Bool?
     
+
+    public init() {}
 
     // MARK: JSONEncodable
     func encodeToJSON() -> AnyObject {
