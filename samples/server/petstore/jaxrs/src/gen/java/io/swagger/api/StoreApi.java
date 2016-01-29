@@ -28,7 +28,7 @@ import javax.ws.rs.*;
 
 
 @io.swagger.annotations.Api(description = "the store API")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JaxRSServerCodegen", date = "2015-12-01T23:25:59.622+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JaxRSServerCodegen", date = "2016-01-14T21:37:36.074Z")
 public class StoreApi  {
    private final StoreApiService delegate = StoreApiServiceFactory.getStoreApi();
 

@@ -12,7 +12,7 @@ import io.swagger.client.model.Order;
 
 import java.util.*;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-12-09T22:51:50.471-05:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2016-01-05T14:39:16.440+08:00")
 public class StoreApi {
   private ApiClient apiClient;
 
