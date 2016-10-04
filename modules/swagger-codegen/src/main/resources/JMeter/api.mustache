@@ -26,7 +26,7 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="testCases" elementType="Argument">
             <stringProp name="Argument.name">testCases</stringProp>
-            <stringProp name="Argument.value">${__P(host,10)}</stringProp>
+            <stringProp name="Argument.value">${__P(testCases,10)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="host" elementType="Argument">
@@ -90,7 +90,7 @@
             <collectionProp name="Arguments.arguments">{{#queryParams}}
               <elementProp name="{{paramName}}" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">0</stringProp>
+                {{=<% %>=}}<stringProp name="Argument.value">${<% paramName %>}</stringProp><%={{ }}=%>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">{{paramName}}</stringProp>
@@ -103,7 +103,7 @@
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">{{vendorExtensions.x-path}}</stringProp>
+          <stringProp name="HTTPSampler.path">{{basePathWithoutHost}}{{vendorExtensions.x-path}}</stringProp>
           <stringProp name="HTTPSampler.method">{{httpMethod}}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>

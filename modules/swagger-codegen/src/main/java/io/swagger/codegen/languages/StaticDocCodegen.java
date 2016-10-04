@@ -18,6 +18,11 @@ public class StaticDocCodegen extends DefaultCodegen implements CodegenConfig {
 
     public StaticDocCodegen() {
         super();
+
+        // clear import mapping (from default generator) as this generator does not use it
+        // at the moment
+        importMapping.clear();
+
         outputFolder = "docs";
         modelTemplateFiles.put("model.mustache", ".html");
         apiTemplateFiles.put("operation.mustache", ".html");
@@ -85,4 +90,16 @@ public class StaticDocCodegen extends DefaultCodegen implements CodegenConfig {
     public String modelFileFolder() {
         return outputFolder + File.separator + sourceFolder + File.separator + "models";
     }
+
+    @Override
+    public String escapeQuotationMark(String input) {
+        // just return the original string
+        return input;
+    }
+
+    @Override
+    public String escapeUnsafeCharacters(String input) {
+        // just return the original string
+        return input;
+    }   
 }
