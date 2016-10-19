@@ -337,6 +337,9 @@ public class ApiClient {
         if (str == null)
             return null;
 
+        return new Date(Long.parseLong(str) * 1000);
+        
+        /*
         DateFormat format;
         if (lenientDatetimeFormat) {
             /*
@@ -364,6 +367,7 @@ public class ApiClient {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+        */
     }
 
     /*
