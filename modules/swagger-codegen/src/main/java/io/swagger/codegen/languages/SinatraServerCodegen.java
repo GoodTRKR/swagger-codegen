@@ -17,12 +17,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfig {
-	
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SinatraServerCodegen.class);
 
     protected String gemName;
@@ -43,7 +43,7 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
         typeMapping.clear();
         languageSpecificPrimitives.clear();
 
-        reservedWords = new HashSet<String>(
+        setReservedWordsLowerCase(
                 Arrays.asList(
                         "__FILE__", "and", "def", "end", "in", "or", "self", "unless", "__LINE__",
                         "begin", "defined?", "ensure", "module", "redo", "super", "until", "BEGIN",
@@ -165,7 +165,7 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
         name = underscore(name);
 
         // for reserved word or word starting with number, append _
-        if (reservedWords.contains(name) || name.matches("^\\d.*")) {
+        if (isReservedWord(name) || name.matches("^\\d.*")) {
             name = escapeReservedWord(name);
         }
 
@@ -181,8 +181,9 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
     @Override
     public String toModelName(String name) {
         // model name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(name)) {
-            throw new RuntimeException(name + " (reserved word) cannot be used as a model name");
+        if (isReservedWord(name)) {
+            LOGGER.warn(name + " (reserved word) cannot be used as model filename. Renamed to " + camelize("model_" + name));
+            name = "model_" + name; // e.g. return => ModelReturn (after camelize)
         }
 
         // camelize the model name
@@ -193,8 +194,9 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
     @Override
     public String toModelFilename(String name) {
         // model name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(name)) {
-            throw new RuntimeException(name + " (reserved word) cannot be used as a model name");
+        if (isReservedWord(name)) {
+            LOGGER.warn(name + " (reserved word) cannot be used as model filename. Renamed to " + underscore("model_" + name));
+            name = "model_" + name; // e.g. return => ModelReturn (after camelize)
         }
 
         // underscore the model file name
@@ -223,8 +225,10 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
     @Override
     public String toOperationId(String operationId) {
         // method name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(operationId)) {
-            throw new RuntimeException(operationId + " (reserved word) cannot be used as method name");
+        if (isReservedWord(operationId)) {
+            String newOperationId = underscore("call_" + operationId);
+            LOGGER.warn(operationId + " (reserved word) cannot be used as method name. Renamed to " + newOperationId);
+            return newOperationId;
         }
 
         return underscore(operationId);
@@ -243,4 +247,14 @@ public class SinatraServerCodegen extends DefaultCodegen implements CodegenConfi
         return super.postProcessSupportingFileData(objs);
     }
 
+    @Override
+    public String escapeQuotationMark(String input) {
+        // remove ' to avoid code injection
+        return input.replace("'", "");
+    }
+
+    @Override
+    public String escapeUnsafeCharacters(String input) {
+        return input.replace("=end", "=_end").replace("=begin", "=_begin");
+    }
 }

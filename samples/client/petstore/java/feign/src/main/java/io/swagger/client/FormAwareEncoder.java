@@ -8,13 +8,12 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.RequestTemplate;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2016-01-11T21:48:33.457Z")
+
 public class FormAwareEncoder implements Encoder {
   public static final String UTF_8 = "utf-8";
   private static final String LINE_FEED = "\r\n";
@@ -32,12 +31,8 @@ public class FormAwareEncoder implements Encoder {
 
   public FormAwareEncoder(Encoder delegate) {
     this.delegate = delegate;
-    // Use RFC3339 format for date and datetime.
-    // See http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14
-    this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    this.dateFormat = new RFC3339DateFormat();;
 
-    // Use UTC as the default time zone.
-    this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     try {
       this.lineFeedBytes = LINE_FEED.getBytes(UTF_8);
       this.boundaryBytes = BOUNDARY.getBytes(UTF_8);

@@ -4,65 +4,62 @@ import io.swagger.client.CollectionFormats.*;
 
 import rx.Observable;
 
-import retrofit.http.*;
+import retrofit2.http.*;
 
-import com.squareup.okhttp.RequestBody;
+import okhttp3.RequestBody;
 
-import java.util.Map;
 import io.swagger.client.model.Order;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface StoreApi {
+  /**
+   * Delete purchase order by ID
+   * For valid response try integer IDs with value &lt; 1000. Anything above 1000 or nonintegers will generate API errors
+   * @param orderId ID of the order that needs to be deleted (required)
+   * @return Call&lt;Void&gt;
+   */
   
+  @DELETE("store/order/{orderId}")
+  Observable<Void> deleteOrder(
+    @retrofit2.http.Path("orderId") String orderId
+  );
+
   /**
    * Returns pet inventories by status
    * Returns a map of status codes to quantities
-   * @return Call<Map<String, Integer>>
+   * @return Call&lt;Map<String, Integer>&gt;
    */
   
   @GET("store/inventory")
   Observable<Map<String, Integer>> getInventory();
     
 
-  
-  /**
-   * Place an order for a pet
-   * 
-   * @param body order placed for purchasing the pet
-   * @return Call<Order>
-   */
-  
-  @POST("store/order")
-  Observable<Order> placeOrder(
-    @Body Order body
-  );
-
-  
   /**
    * Find purchase order by ID
-   * For valid response try integer IDs with value &lt;= 5 or &gt; 10. Other values will generated exceptions
-   * @param orderId ID of pet that needs to be fetched
-   * @return Call<Order>
+   * For valid response try integer IDs with value &lt;&#x3D; 5 or &gt; 10. Other values will generated exceptions
+   * @param orderId ID of pet that needs to be fetched (required)
+   * @return Call&lt;Order&gt;
    */
   
   @GET("store/order/{orderId}")
   Observable<Order> getOrderById(
-    @Path("orderId") String orderId
+    @retrofit2.http.Path("orderId") Long orderId
   );
 
-  
   /**
-   * Delete purchase order by ID
-   * For valid response try integer IDs with value &lt; 1000. Anything above 1000 or nonintegers will generate API errors
-   * @param orderId ID of the order that needs to be deleted
-   * @return Call<Void>
+   * Place an order for a pet
+   * 
+   * @param body order placed for purchasing the pet (required)
+   * @return Call&lt;Order&gt;
    */
   
-  @DELETE("store/order/{orderId}")
-  Observable<Void> deleteOrder(
-    @Path("orderId") String orderId
+  @POST("store/order")
+  Observable<Order> placeOrder(
+    @retrofit2.http.Body Order body
   );
 
-  
 }

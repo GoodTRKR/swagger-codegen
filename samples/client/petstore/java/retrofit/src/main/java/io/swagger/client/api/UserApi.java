@@ -7,118 +7,165 @@ import retrofit.http.*;
 import retrofit.mime.*;
 
 import io.swagger.client.model.User;
-import java.util.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface UserApi {
-  
   /**
    * Create user
    * Sync method
    * This can only be done by the logged in user.
-   * @param body Created user object
+   * @param body Created user object (required)
    * @return Void
    */
   
   @POST("/user")
   Void createUser(
-    @Body User body
+    @retrofit.http.Body User body
   );
 
   /**
    * Create user
    * Async method
-   * @param body Created user object
+   * @param body Created user object (required)
    * @param cb callback method
    * @return void
    */
   
   @POST("/user")
   void createUser(
-    @Body User body, Callback<Void> cb
+    @retrofit.http.Body User body, Callback<Void> cb
   );
-  
   /**
    * Creates list of users with given input array
    * Sync method
    * 
-   * @param body List of user object
+   * @param body List of user object (required)
    * @return Void
    */
   
   @POST("/user/createWithArray")
   Void createUsersWithArrayInput(
-    @Body List<User> body
+    @retrofit.http.Body List<User> body
   );
 
   /**
    * Creates list of users with given input array
    * Async method
-   * @param body List of user object
+   * @param body List of user object (required)
    * @param cb callback method
    * @return void
    */
   
   @POST("/user/createWithArray")
   void createUsersWithArrayInput(
-    @Body List<User> body, Callback<Void> cb
+    @retrofit.http.Body List<User> body, Callback<Void> cb
   );
-  
   /**
    * Creates list of users with given input array
    * Sync method
    * 
-   * @param body List of user object
+   * @param body List of user object (required)
    * @return Void
    */
   
   @POST("/user/createWithList")
   Void createUsersWithListInput(
-    @Body List<User> body
+    @retrofit.http.Body List<User> body
   );
 
   /**
    * Creates list of users with given input array
    * Async method
-   * @param body List of user object
+   * @param body List of user object (required)
    * @param cb callback method
    * @return void
    */
   
   @POST("/user/createWithList")
   void createUsersWithListInput(
-    @Body List<User> body, Callback<Void> cb
+    @retrofit.http.Body List<User> body, Callback<Void> cb
   );
+  /**
+   * Delete user
+   * Sync method
+   * This can only be done by the logged in user.
+   * @param username The name that needs to be deleted (required)
+   * @return Void
+   */
   
+  @DELETE("/user/{username}")
+  Void deleteUser(
+    @retrofit.http.Path("username") String username
+  );
+
+  /**
+   * Delete user
+   * Async method
+   * @param username The name that needs to be deleted (required)
+   * @param cb callback method
+   * @return void
+   */
+  
+  @DELETE("/user/{username}")
+  void deleteUser(
+    @retrofit.http.Path("username") String username, Callback<Void> cb
+  );
+  /**
+   * Get user by user name
+   * Sync method
+   * 
+   * @param username The name that needs to be fetched. Use user1 for testing.  (required)
+   * @return User
+   */
+  
+  @GET("/user/{username}")
+  User getUserByName(
+    @retrofit.http.Path("username") String username
+  );
+
+  /**
+   * Get user by user name
+   * Async method
+   * @param username The name that needs to be fetched. Use user1 for testing.  (required)
+   * @param cb callback method
+   * @return void
+   */
+  
+  @GET("/user/{username}")
+  void getUserByName(
+    @retrofit.http.Path("username") String username, Callback<User> cb
+  );
   /**
    * Logs user into the system
    * Sync method
    * 
-   * @param username The user name for login
-   * @param password The password for login in clear text
+   * @param username The user name for login (required)
+   * @param password The password for login in clear text (required)
    * @return String
    */
   
   @GET("/user/login")
   String loginUser(
-    @Query("username") String username, @Query("password") String password
+    @retrofit.http.Query("username") String username, @retrofit.http.Query("password") String password
   );
 
   /**
    * Logs user into the system
    * Async method
-   * @param username The user name for login
-   * @param password The password for login in clear text
+   * @param username The user name for login (required)
+   * @param password The password for login in clear text (required)
    * @param cb callback method
    * @return void
    */
   
   @GET("/user/login")
   void loginUser(
-    @Query("username") String username, @Query("password") String password, Callback<String> cb
+    @retrofit.http.Query("username") String username, @retrofit.http.Query("password") String password, Callback<String> cb
   );
-  
   /**
    * Logs out current logged in user session
    * Sync method
@@ -141,85 +188,31 @@ public interface UserApi {
   void logoutUser(
     Callback<Void> cb
   );
-  
-  /**
-   * Get user by user name
-   * Sync method
-   * 
-   * @param username The name that needs to be fetched. Use user1 for testing.
-   * @return User
-   */
-  
-  @GET("/user/{username}")
-  User getUserByName(
-    @Path("username") String username
-  );
-
-  /**
-   * Get user by user name
-   * Async method
-   * @param username The name that needs to be fetched. Use user1 for testing.
-   * @param cb callback method
-   * @return void
-   */
-  
-  @GET("/user/{username}")
-  void getUserByName(
-    @Path("username") String username, Callback<User> cb
-  );
-  
   /**
    * Updated user
    * Sync method
    * This can only be done by the logged in user.
-   * @param username name that need to be deleted
-   * @param body Updated user object
+   * @param username name that need to be deleted (required)
+   * @param body Updated user object (required)
    * @return Void
    */
   
   @PUT("/user/{username}")
   Void updateUser(
-    @Path("username") String username, @Body User body
+    @retrofit.http.Path("username") String username, @retrofit.http.Body User body
   );
 
   /**
    * Updated user
    * Async method
-   * @param username name that need to be deleted
-   * @param body Updated user object
+   * @param username name that need to be deleted (required)
+   * @param body Updated user object (required)
    * @param cb callback method
    * @return void
    */
   
   @PUT("/user/{username}")
   void updateUser(
-    @Path("username") String username, @Body User body, Callback<Void> cb
+    @retrofit.http.Path("username") String username, @retrofit.http.Body User body, Callback<Void> cb
   );
-  
-  /**
-   * Delete user
-   * Sync method
-   * This can only be done by the logged in user.
-   * @param username The name that needs to be deleted
-   * @return Void
-   */
-  
-  @DELETE("/user/{username}")
-  Void deleteUser(
-    @Path("username") String username
-  );
-
-  /**
-   * Delete user
-   * Async method
-   * @param username The name that needs to be deleted
-   * @param cb callback method
-   * @return void
-   */
-  
-  @DELETE("/user/{username}")
-  void deleteUser(
-    @Path("username") String username, Callback<Void> cb
-  );
-  
 }

@@ -2,6 +2,7 @@ package io.swagger.codegen.java;
 
 import io.swagger.codegen.AbstractOptionsTest;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.options.JavaClientOptionsProvider;
 import io.swagger.codegen.options.JavaOptionsProvider;
 import io.swagger.codegen.languages.JavaClientCodegen;
 import io.swagger.codegen.options.OptionsProvider;
@@ -15,7 +16,7 @@ public class JavaClientOptionsTest extends AbstractOptionsTest {
     private JavaClientCodegen clientCodegen;
 
     public JavaClientOptionsTest() {
-        super(new JavaOptionsProvider());
+        super(new JavaClientOptionsProvider());
     }
 
     protected JavaClientOptionsTest(OptionsProvider optionsProvider) {
@@ -51,10 +52,12 @@ public class JavaClientOptionsTest extends AbstractOptionsTest {
             times = 1;
             clientCodegen.setSerializableModel(Boolean.valueOf(JavaOptionsProvider.SERIALIZABLE_MODEL_VALUE));
             times = 1;
-            clientCodegen.setLibrary(JavaOptionsProvider.DEFAULT_LIBRARY_VALUE);
+            clientCodegen.setLibrary(JavaClientOptionsProvider.DEFAULT_LIBRARY_VALUE);
             times = 1;
             clientCodegen.setFullJavaUtil(Boolean.valueOf(JavaOptionsProvider.FULL_JAVA_UTIL_VALUE));
             times = 1;
+            //clientCodegen.setSupportJava6(Boolean.valueOf(JavaOptionsProvider.SUPPORT_JAVA6));
+            //times = 1;
         }};
     }
 }

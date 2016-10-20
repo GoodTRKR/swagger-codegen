@@ -1,3 +1,4 @@
+{{>licenseInfo}}
 #include "{{classname}}.h"
 #include "{{prefix}}Helpers.h"
 #include "{{prefix}}ModelFactory.h"
@@ -23,56 +24,56 @@ void
     fullPath.append(this->host).append(this->basePath).append("{{path}}");
 
     {{#pathParams}}
-    QString {{paramName}}PathParam("{"); {{paramName}}PathParam.append("{{paramName}}").append("}");
+    QString {{paramName}}PathParam("{"); {{paramName}}PathParam.append("{{baseName}}").append("}");
     fullPath.replace({{paramName}}PathParam, stringValue({{paramName}}));
     {{/pathParams}}
 
     {{#queryParams}}
     {{^collectionFormat}}
-    if(fullPath.indexOf("?") > 0) 
+    if (fullPath.indexOf("?") > 0) 
       fullPath.append("&");
     else 
       fullPath.append("?");
-    fullPath.append(QUrl::toPercentEncoding("{{paramName}}"))
+    fullPath.append(QUrl::toPercentEncoding("{{baseName}}"))
         .append("=")
         .append(QUrl::toPercentEncoding(stringValue({{paramName}})));
     {{/collectionFormat}}
 
     {{#collectionFormat}}
 
-    if({{{paramName}}}->size() > 0) {
-      if(QString("{{collectionFormat}}").indexOf("multi") == 0) {
+    if ({{{paramName}}}->size() > 0) {
+      if (QString("{{collectionFormat}}").indexOf("multi") == 0) {
         foreach({{{baseType}}} t, *{{paramName}}) {
-          if(fullPath.indexOf("?") > 0)
+          if (fullPath.indexOf("?") > 0)
             fullPath.append("&");
           else 
             fullPath.append("?");
-          fullPath.append("{{{paramName}}}=").append(stringValue(t));
+          fullPath.append("{{{baseName}}}=").append(stringValue(t));
         }
       }
       else if (QString("{{collectionFormat}}").indexOf("ssv") == 0) {
-        if(fullPath.indexOf("?") > 0)
+        if (fullPath.indexOf("?") > 0)
           fullPath.append("&");
         else 
           fullPath.append("?");
-        fullPath.append("{{paramName}}=");
+        fullPath.append("{{baseName}}=");
         qint32 count = 0;
         foreach({{{baseType}}} t, *{{paramName}}) {
-          if(count > 0) {
+          if (count > 0) {
             fullPath.append(" ");
           }
           fullPath.append(stringValue(t));
         }
       }
       else if (QString("{{collectionFormat}}").indexOf("tsv") == 0) {
-        if(fullPath.indexOf("?") > 0)
+        if (fullPath.indexOf("?") > 0)
           fullPath.append("&");
         else 
           fullPath.append("?");
-        fullPath.append("{{paramName}}=");
+        fullPath.append("{{baseName}}=");
         qint32 count = 0;
         foreach({{{baseType}}} t, *{{paramName}}) {
-          if(count > 0) {
+          if (count > 0) {
             fullPath.append("\t");
           }
           fullPath.append(stringValue(t));
@@ -86,11 +87,10 @@ void
     HttpRequestWorker *worker = new HttpRequestWorker();
     HttpRequestInput input(fullPath, "{{httpMethod}}");
 
-    {{#formParams}}{{^isFile}}
-    if({{paramName}} != NULL) {
-        input.add_var("{{paramName}}", *{{paramName}});
+    {{#formParams}}if ({{paramName}} != NULL) {
+        {{^isFile}}input.add_var("{{baseName}}", *{{paramName}});{{/isFile}}{{#isFile}}input.add_file("{{baseName}}", (*{{paramName}}).local_filename, (*{{paramName}}).request_filename, (*{{paramName}}).mime_type);{{/isFile}}
     }
-    {{/isFile}}{{/formParams}}
+    {{/formParams}}
 
     {{#bodyParams}}
     {{#isContainer}}

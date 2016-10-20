@@ -4,52 +4,43 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.codegen.*;
 import io.swagger.models.Operation;
 import io.swagger.models.Swagger;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
 import io.swagger.util.Yaml;
-
-import java.util.*;
-
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JavaInflectorServerCodegen extends JavaClientCodegen implements CodegenConfig {
+import java.util.*;
+
+public class JavaInflectorServerCodegen extends AbstractJavaCodegen {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaInflectorServerCodegen.class);
 
     protected String title = "Swagger Inflector";
-
+    protected String implFolder = "src/main/java";
     public JavaInflectorServerCodegen() {
         super();
 
-        sourceFolder = "src/main/java";
-        modelTemplateFiles.put("model.mustache", ".java");
-        apiTemplateFiles.put("api.mustache", ".java");
+        sourceFolder = "src/gen/java";
+        apiTestTemplateFiles.clear(); // TODO: add test template
         embeddedTemplateDir = templateDir = "JavaInflector";
         invokerPackage = "io.swagger.handler";
         artifactId = "swagger-inflector-server";
+        dateLibrary = "legacy"; //TODO: add joda support
+
+        // clear model and api doc template as this codegen
+        // does not support auto-generated markdown doc at the moment
+        //TODO: add doc templates
+        modelDocTemplateFiles.remove("model_doc.mustache");
+        apiDocTemplateFiles.remove("api_doc.mustache");
+
 
         apiPackage = System.getProperty("swagger.codegen.inflector.apipackage", "io.swagger.handler");
         modelPackage = System.getProperty("swagger.codegen.inflector.modelpackage", "io.swagger.model");
 
-        additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
-        additionalProperties.put(CodegenConstants.GROUP_ID, groupId);
-        additionalProperties.put(CodegenConstants.ARTIFACT_ID, artifactId);
-        additionalProperties.put(CodegenConstants.ARTIFACT_VERSION, artifactVersion);
         additionalProperties.put("title", title);
-
-        languageSpecificPrimitives = new HashSet<String>(
-                Arrays.asList(
-                        "byte[]",
-                        "String",
-                        "boolean",
-                        "Boolean",
-                        "Double",
-                        "Integer",
-                        "Long",
-                        "Float")
-        );
+        // java inflector uses the jackson lib
+        additionalProperties.put("jackson", "true");
     }
 
     @Override
@@ -71,32 +62,16 @@ public class JavaInflectorServerCodegen extends JavaClientCodegen implements Cod
     public void processOpts() {
         super.processOpts();
 
-        supportingFiles.clear();
-        supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
-        supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-        supportingFiles.add(new SupportingFile("web.mustache", "src/main/webapp/WEB-INF", "web.xml"));
-        supportingFiles.add(new SupportingFile("inflector.mustache", "", "inflector.yaml"));
+        writeOptional(outputFolder, new SupportingFile("pom.mustache", "", "pom.xml"));
+        writeOptional(outputFolder, new SupportingFile("README.mustache", "", "README.md"));
+        writeOptional(outputFolder, new SupportingFile("web.mustache", "src/main/webapp/WEB-INF", "web.xml"));
+        writeOptional(outputFolder, new SupportingFile("inflector.mustache", "", "inflector.yaml"));
         supportingFiles.add(new SupportingFile("swagger.mustache",
                         "src/main/swagger",
                         "swagger.yaml")
         );
         supportingFiles.add(new SupportingFile("StringUtil.mustache",
                 (sourceFolder + '/' + invokerPackage).replace(".", "/"), "StringUtil.java"));
-    }
-
-    @Override
-    public String getTypeDeclaration(Property p) {
-        if (p instanceof ArrayProperty) {
-            ArrayProperty ap = (ArrayProperty) p;
-            Property inner = ap.getItems();
-            return getSwaggerType(p) + "<" + getTypeDeclaration(inner) + ">";
-        } else if (p instanceof MapProperty) {
-            MapProperty mp = (MapProperty) p;
-            Property inner = mp.getAdditionalProperties();
-
-            return getTypeDeclaration(inner);
-        }
-        return super.getTypeDeclaration(p);
     }
 
     @Override
@@ -162,6 +137,54 @@ public class JavaInflectorServerCodegen extends JavaClientCodegen implements Cod
         return objs;
     }
 
+    @Override
+    public void postProcessModelProperty(CodegenModel model, CodegenProperty property) {
+        super.postProcessModelProperty(model, property);
+
+        //Add imports for Jackson
+        if(!BooleanUtils.toBoolean(model.isEnum)) {
+            model.imports.add("JsonProperty");
+
+            if(BooleanUtils.toBoolean(model.hasEnums)) {
+                model.imports.add("JsonValue");
+            }
+        }
+    }
+
+    @Override
+    public Map<String, Object> postProcessModelsEnum(Map<String, Object> objs) {
+        objs = super.postProcessModelsEnum(objs);
+
+        //Add imports for Jackson
+        List<Map<String, String>> imports = (List<Map<String, String>>)objs.get("imports");
+        List<Object> models = (List<Object>) objs.get("models");
+        for (Object _mo : models) {
+            Map<String, Object> mo = (Map<String, Object>) _mo;
+            CodegenModel cm = (CodegenModel) mo.get("model");
+            // for enum model
+            if (Boolean.TRUE.equals(cm.isEnum) && cm.allowableValues != null) {
+                cm.imports.add(importMapping.get("JsonValue"));
+                Map<String, String> item = new HashMap<String, String>();
+                item.put("import", importMapping.get("JsonValue"));
+                imports.add(item);
+            }
+        }
+
+        return objs;
+    }
+
+    public String apiFilename(String templateName, String tag) {
+        String result = super.apiFilename(templateName, tag);
+
+        if ( templateName.endsWith("api.mustache") ) {
+            int ix = result.indexOf(sourceFolder);
+            String beg = result.substring(0, ix);
+            String end = result.substring(ix + sourceFolder.length());
+            new java.io.File(beg + implFolder).mkdirs();
+            result = beg + implFolder + end;
+        }
+        return result;
+    }
 
     @Override
     public Map<String, Object> postProcessSupportingFileData(Map<String, Object> objs) {
@@ -183,13 +206,5 @@ public class JavaInflectorServerCodegen extends JavaClientCodegen implements Cod
         }
         name = name.replaceAll("[^a-zA-Z0-9]+", "_"); // FIXME: a parameter should not be assigned. Also declare the methods parameters as 'final'.
         return camelize(name)+ "Controller";
-    }
-
-    @Override
-    public boolean shouldOverwrite(String filename) {
-        return super.shouldOverwrite(filename)  &&
-        !filename.endsWith("pom.xml") &&
-        !filename.endsWith("README.md") &&
-        !filename.endsWith("inflector.yaml");
     }
 }

@@ -1,20 +1,16 @@
 package io.swagger.codegen.languages;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import io.swagger.codegen.CodegenOperation;
-import io.swagger.codegen.CodegenResponse;
-import io.swagger.codegen.CodegenType;
+import io.swagger.codegen.*;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 
-public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
-{
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+
+public abstract class AbstractJavaJAXRSServerCodegen extends AbstractJavaCodegen {
     /**
      * Name of the sub-directory in "src/main/resource" where to find the
      * Mustache template for the JAX-RS Codegen.
@@ -22,21 +18,29 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
     protected static final String JAXRS_TEMPLATE_DIRECTORY_NAME = "JavaJaxRS";
     protected String implFolder = "src/main/java";
     protected String title = "Swagger Server";
+    static Logger LOGGER = LoggerFactory.getLogger(AbstractJavaJAXRSServerCodegen.class);
 
     public AbstractJavaJAXRSServerCodegen()
     {
         super();
+
+        sourceFolder = "src/gen/java";
+        invokerPackage = "io.swagger.api";
+        artifactId = "swagger-jaxrs-server";
+        dateLibrary = "legacy"; //TODO: add joda support to all jax-rs
+
+        apiPackage = "io.swagger.api";
+        modelPackage = "io.swagger.model";
+
+        additionalProperties.put("title", title);
+        // java inflector uses the jackson lib
+        additionalProperties.put("jackson", "true");
+
+        cliOptions.add(new CliOption(CodegenConstants.IMPL_FOLDER, CodegenConstants.IMPL_FOLDER_DESC));
+        cliOptions.add(new CliOption("title", "a title describing the application"));
+
     }
 
-    // ================
-    // ABSTRACT METHODS
-    // ================
-
-    @Override
-    public abstract String getHelp();
-
-    @Override
-    public abstract String getName();
 
     // ===============
     // COMMONS METHODS
@@ -49,8 +53,16 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
     }
 
     @Override
-    public void preprocessSwagger(Swagger swagger)
-    {
+    public void processOpts() {
+        super.processOpts();
+
+        if (additionalProperties.containsKey(CodegenConstants.IMPL_FOLDER)) {
+            implFolder = (String) additionalProperties.get(CodegenConstants.IMPL_FOLDER);
+        }
+    }
+
+    @Override
+    public void preprocessSwagger(Swagger swagger) {
         if ( "/".equals(swagger.getBasePath()) ) {
             swagger.setBasePath("");
         }
@@ -93,14 +105,32 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
     }
 
     @Override
-    public Map<String, Object> postProcessOperations(Map<String, Object> objs)
-    {
+    public Map<String, Object> postProcessOperations(Map<String, Object> objs) {
         @SuppressWarnings("unchecked")
         Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
         if ( operations != null ) {
             @SuppressWarnings("unchecked")
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
             for ( CodegenOperation operation : ops ) {
+                boolean isMultipartPost = false;
+                List<Map<String, String>> consumes = operation.consumes;
+                if(consumes != null) {
+                    for(Map<String, String> consume : consumes) {
+                        String mt = consume.get("mediaType");
+                        if(mt != null) {
+                            if(mt.startsWith("multipart/form-data")) {
+                                isMultipartPost = true;
+                            }
+                        }
+                    }
+                }
+
+                for(CodegenParameter parameter : operation.allParams) {
+                    if(isMultipartPost) {
+                        parameter.vendorExtensions.put("x-multipart", "true");
+                    }
+                }
+
                 List<CodegenResponse> responses = operation.responses;
                 if ( responses != null ) {
                     for ( CodegenResponse resp : responses ) {
@@ -139,8 +169,7 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
     }
 
     @Override
-    public String toApiName(final String name)
-    {
+    public String toApiName(final String name) {
         String computed = name;
         if ( computed.length() == 0 ) {
             return "DefaultApi";
@@ -150,8 +179,7 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
     }
 
     @Override
-    public String apiFilename(String templateName, String tag)
-    {
+    public String apiFilename(String templateName, String tag) {
         String result = super.apiFilename(templateName, tag);
 
         if ( templateName.endsWith("Impl.mustache") ) {
@@ -169,14 +197,12 @@ public abstract class AbstractJavaJAXRSServerCodegen extends JavaClientCodegen
         return result;
     }
 
-    private String implFileFolder(String output)
-    {
+    private String implFileFolder(String output) {
         return outputFolder + "/" + output + "/" + apiPackage().replace('.', '/');
     }
 
     @Override
-    public boolean shouldOverwrite(String filename)
-    {
+    public boolean shouldOverwrite(String filename) {
         return super.shouldOverwrite(filename) && !filename.endsWith("ServiceImpl.java") && !filename.endsWith("ServiceFactory.java");
     }
 

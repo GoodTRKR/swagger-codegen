@@ -40,7 +40,7 @@ void PetApiTests::findPetsByStatusTest() {
 
     static QEventLoop loop;
     QTimer timer;
-    timer.setInterval(4000);
+    timer.setInterval(14000);
     timer.setSingleShot(true);
 
     auto validator = [](QList<SWGPet*>* pets) {
@@ -68,7 +68,7 @@ void PetApiTests::createAndGetPetTest() {
 
     static QEventLoop loop;
     QTimer timer;
-    timer.setInterval(1000);
+    timer.setInterval(14000);
     timer.setSingleShot(true);
 
     auto validator = []() {
@@ -228,7 +228,7 @@ void PetApiTests::updatePetWithFormTest() {
     connect(api, &SWGPetApi::updatePetWithFormSignal, this, [](){loop.quit();});
     connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
 
-    api->updatePetWithForm(new QString(QString::number(id)), new QString("gorilla"), NULL);
+    api->updatePetWithForm(id, new QString("gorilla"), NULL);
     timer.start();
     loop.exec();
     QVERIFY2(timer.isActive(), "didn't finish within timeout");

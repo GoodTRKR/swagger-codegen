@@ -19,12 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 public class StaticHtmlGenerator extends DefaultCodegen implements CodegenConfig {
-    private static final String ALL_OPERATIONS = "";
     protected String invokerPackage = "io.swagger.client";
     protected String groupId = "io.swagger";
     protected String artifactId = "swagger-client";
     protected String artifactVersion = "1.0.0";
-    protected String sourceFolder = "src/main/scala";
 
     public StaticHtmlGenerator() {
         super();
@@ -102,19 +100,16 @@ public class StaticHtmlGenerator extends DefaultCodegen implements CodegenConfig
         return objs;
     }
 
+
     @Override
-    public void addOperationToGroup(String tag, String resourcePath, Operation operation, CodegenOperation co, Map<String, List<CodegenOperation>> operations) {
-        List<CodegenOperation> opList = operations.get(ALL_OPERATIONS);
-        if (opList == null) {
-            opList = new ArrayList<CodegenOperation>();
-            operations.put(ALL_OPERATIONS, opList);
-        }
-        for (CodegenOperation addedOperation : opList) {
-            if (addedOperation.operationId.equals(co.operationId) && addedOperation.path.equals(co.path) && addedOperation.httpMethod.equals(co.httpMethod)) {
-                addedOperation.tags.addAll(co.tags);
-                return;
-            }
-        }
-        opList.add(co);
+    public String escapeQuotationMark(String input) {
+        // just return the original string
+        return input;
+    }
+
+    @Override
+    public String escapeUnsafeCharacters(String input) {
+        // just return the original string
+        return input;
     }
 }

@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class TizenClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected static String PREFIX = "Sami";
@@ -53,7 +53,7 @@ public class TizenClientCodegen extends DefaultCodegen implements CodegenConfig 
 
         additionalProperties().put("prefix", PREFIX);
 
-        reservedWords = new HashSet<String>(
+        setReservedWordsLowerCase(
                 // VERIFY
                 Arrays.asList(
                         "void", "char", "short", "int", "void", "char", "short", "int",
@@ -273,7 +273,7 @@ public class TizenClientCodegen extends DefaultCodegen implements CodegenConfig 
         }
 
         // method name cannot use reserved keyword, e.g. return$
-        if (reservedWords.contains(operationId)) {
+        if (isReservedWord(operationId)) {
             throw new RuntimeException(operationId + " (reserved word) cannot be used as method name");
         }
 
@@ -281,4 +281,14 @@ public class TizenClientCodegen extends DefaultCodegen implements CodegenConfig 
         return camelize(operationId, true);
     }
 
+    @Override
+    public String escapeQuotationMark(String input) {
+        // remove " to avoid code injection
+        return input.replace("\"", "");
+    }
+
+    @Override
+    public String escapeUnsafeCharacters(String input) {
+        return input.replace("*/", "*_/").replace("/*", "/_*");
+    }
 }

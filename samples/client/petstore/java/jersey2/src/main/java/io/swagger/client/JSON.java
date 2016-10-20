@@ -8,7 +8,7 @@ import java.text.DateFormat;
 
 import javax.ws.rs.ext.ContextResolver;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2016-01-05T14:39:17.660+08:00")
+
 public class JSON implements ContextResolver<ObjectMapper> {
   private ObjectMapper mapper;
 
@@ -19,6 +19,7 @@ public class JSON implements ContextResolver<ObjectMapper> {
     mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
     mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+    mapper.setDateFormat(new RFC3339DateFormat());
     mapper.registerModule(new JodaModule());
   }
 

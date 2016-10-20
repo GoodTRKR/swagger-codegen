@@ -17,7 +17,7 @@ import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -29,7 +29,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
     protected String packageVersion;
 
     protected String invokerPackage = "io.swagger";
-    protected String sourceFolder = "src/main/flex";
+    protected String sourceFolder = "flash";
 
     public FlashClientCodegen() {
         super();
@@ -70,8 +70,8 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         importMapping = new HashMap<String, String>();
         importMapping.put("File", "flash.filesystem.File");
 
-        // from 
-        reservedWords = new HashSet<String>(Arrays.asList("add", "for", "lt", "tellTarget", "and",
+        // from
+        setReservedWordsLowerCase(Arrays.asList("add", "for", "lt", "tellTarget", "and",
                 "function", "ne", "this", "break", "ge", "new", "typeof", "continue", "gt", "not",
                 "var", "delete", "if", "on", "void", "do", "ifFrameLoaded", "onClipEvent", "while",
                 "else", "in", "or", "with", "eq", "le", "return"));
@@ -83,7 +83,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
                 .defaultValue("1.0.0"));
         cliOptions.add(new CliOption(CodegenConstants.INVOKER_PACKAGE, CodegenConstants.INVOKER_PACKAGE_DESC));
         cliOptions.add(new CliOption(CodegenConstants.SOURCE_FOLDER, "source folder for generated " +
-                "code. e.g. src/main/flex"));
+                "code. e.g. flash"));
 
     }
 
@@ -124,8 +124,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         //modelPackage = invokerPackage + File.separatorChar + "client" + File.separatorChar + "model";
         //apiPackage = invokerPackage + File.separatorChar + "client" + File.separatorChar + "api";
 
-        final String invokerFolder = (sourceFolder + File.separator + invokerPackage + File.separator
-                + "swagger" + File.separator).replace(".", File.separator).replace('.', File.separatorChar);
+        final String invokerFolder = (sourceFolder + File.separator + "src/" + invokerPackage + File.separator).replace(".", File.separator).replace('.', File.separatorChar);
 
         supportingFiles.add(new SupportingFile("ApiInvoker.as", invokerFolder + "common", "ApiInvoker.as"));
         supportingFiles.add(new SupportingFile("ApiUrlHelper.as", invokerFolder + "common", "ApiUrlHelper.as"));
@@ -133,14 +132,15 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         supportingFiles.add(new SupportingFile("ListWrapper.as", invokerFolder + "common", "ListWrapper.as"));
         supportingFiles.add(new SupportingFile("SwaggerApi.as", invokerFolder + "common", "SwaggerApi.as"));
         supportingFiles.add(new SupportingFile("XMLWriter.as", invokerFolder + "common", "XMLWriter.as"));
-        supportingFiles.add(new SupportingFile("ApiError.as", invokerFolder + "exception", "ApiErrors.as"));
+        supportingFiles.add(new SupportingFile("ApiError.as", invokerFolder + "exception", "ApiError.as"));
         supportingFiles.add(new SupportingFile("ApiErrorCodes.as", invokerFolder + "exception", "ApiErrorCodes.as"));
         supportingFiles.add(new SupportingFile("ApiClientEvent.as", invokerFolder + "event", "ApiClientEvent.as"));
         supportingFiles.add(new SupportingFile("Response.as", invokerFolder + "event", "Response.as"));
         supportingFiles.add(new SupportingFile("build.properties", sourceFolder, "build.properties"));
         supportingFiles.add(new SupportingFile("build.xml", sourceFolder, "build.xml"));
-        supportingFiles.add(new SupportingFile("AirExecutorApp-app.xml", sourceFolder + File.separatorChar
-                + "bin", "AirExecutorApp-app.xml"));
+        supportingFiles.add(new SupportingFile("README.txt", sourceFolder, "README.txt"));
+        //supportingFiles.add(new SupportingFile("AirExecutorApp-app.xml", sourceFolder + File.separatorChar
+        //        + "bin", "AirExecutorApp-app.xml"));
         supportingFiles.add(new SupportingFile("ASAXB-0.1.1.swc", sourceFolder + File.separatorChar
                 + "lib", "ASAXB-0.1.1.swc"));
         supportingFiles.add(new SupportingFile("as3corelib.swc", sourceFolder + File.separatorChar
@@ -153,6 +153,8 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
                 + File.separator + "lib" + File.separator + "ext", "flexunit-cilistener-4.1.0_RC2-28-3.5.0.12683.swc"));
         supportingFiles.add(new SupportingFile("flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc", sourceFolder
                 + File.separator + "lib" + File.separator + "ext", "flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc"));
+        supportingFiles.add(new SupportingFile("git_push.sh.mustache", "", "git_push.sh"));
+        supportingFiles.add(new SupportingFile("gitignore.mustache", "", ".gitignore"));
     }
 
     private static String dropDots(String str) {
@@ -181,13 +183,13 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String apiFileFolder() {
-        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar
+        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar + "src/"
                 + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
     }
 
     @Override
     public String modelFileFolder() {
-        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar
+        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar + "src/"
                 + modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
     }
 
@@ -253,7 +255,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         } else if (p instanceof ArrayProperty) {
             return "new Array()";
         } else {
-            return "null";
+            return "NaN";
         }
     }
 
@@ -261,7 +263,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
     public String toVarName(String name) {
         // replace - with _ e.g. created-at => created_at
         name = name.replaceAll("-", "_"); // FIXME: a parameter should not be assigned. Also declare the methods parameters as 'final'.
- 
+
         // if it's all uppper case, convert to lower case
         if (name.matches("^[A-Z_]*$")) {
             name = name.toLowerCase();
@@ -272,7 +274,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         name = camelize(dropDots(name), true);
 
         // for reserved word or word starting with number, append _
-        if (reservedWords.contains(name) || name.matches("^\\d.*")) {
+        if (isReservedWord(name) || name.matches("^\\d.*")) {
             name = escapeReservedWord(name);
         }
 
@@ -287,9 +289,20 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String toModelName(String name) {
+        if (!StringUtils.isEmpty(modelNamePrefix)) {
+            name = modelNamePrefix + "_" + name;
+        }
+
+        if (!StringUtils.isEmpty(modelNameSuffix)) {
+            name = name + "_" + modelNameSuffix;
+        }
+
+        name = sanitizeName(name);
+
         // model name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(name)) {
-            throw new RuntimeException(name + " (reserved word) cannot be used as a model name");
+        if (isReservedWord(name)) {
+            LOGGER.warn(name + " (reserved word) cannot be used as model name. Renamed to " + camelize("model_" + name));
+            name = "model_" + name; // e.g. return => ModelReturn (after camelize)
         }
 
         // camelize the model name
@@ -299,14 +312,8 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String toModelFilename(String name) {
-        // model name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(name)) {
-            throw new RuntimeException(name + " (reserved word) cannot be used as a model name");
-        }
-
-        // underscore the model file name
-        // PhoneNumber => phone_number
-        return camelize(dropDots(name));
+        // leverage toModelName
+        return dropDots(toModelName(name));
     }
 
     @Override
@@ -343,8 +350,9 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         }
 
         // method name cannot use reserved keyword, e.g. return
-        if (reservedWords.contains(operationId)) {
-            throw new RuntimeException(operationId + " (reserved word) cannot be used as method name");
+        if (isReservedWord(operationId)) {
+            LOGGER.warn(operationId + " (reserved word) cannot be used as method name. Renamed to " + underscore(sanitizeName("call_" + operationId)));
+            operationId = "call_" + operationId;
         }
 
         return underscore(operationId);
@@ -364,5 +372,16 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
 
     public void setSourceFolder(String sourceFolder) {
         this.sourceFolder = sourceFolder;
+    }
+
+    @Override
+    public String escapeQuotationMark(String input) {
+        // remove " to avoid code injection
+        return input.replace("\"", "");
+    }
+
+    @Override
+    public String escapeUnsafeCharacters(String input) {
+        return input.replace("*/", "*_/").replace("/*", "/_*");
     }
 }
