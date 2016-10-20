@@ -342,11 +342,11 @@ public class ApiClient {
         /*
         DateFormat format;
         if (lenientDatetimeFormat) {
-            /*
-             * When lenientDatetimeFormat is enabled, normalize the date string
-             * into <code>LENIENT_DATETIME_FORMAT</code> to support various formats
-             * defined by ISO 8601.
-             */
+            //
+            // When lenientDatetimeFormat is enabled, normalize the date string
+            // into <code>LENIENT_DATETIME_FORMAT</code> to support various formats
+            // defined by ISO 8601.
+            //
             // normalize time zone
             //   trailing "Z": 2015-08-16T08:20:05Z => 2015-08-16T08:20:05+0000
             str = str.replaceAll("[zZ]\\z", "+0000");
