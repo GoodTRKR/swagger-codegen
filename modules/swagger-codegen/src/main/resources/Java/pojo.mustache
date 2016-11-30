@@ -168,7 +168,12 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
     {{/complexType}}
     {{/isContainer}}
     {{^isContainer}}
+    {{#isPrimitiveType}}
     {{name}} = ({{{datatypeWithEnum}}})in.readValue(null);
+    {{/isPrimitiveType}}
+    {{^isPrimitiveType}}
+    {{name}} = ({{{datatypeWithEnum}}})in.readValue({{complexType}}.class.getClassLoader());
+    {{/isPrimitiveType}}
     {{/isContainer}}
     {{/vars}}
   }
